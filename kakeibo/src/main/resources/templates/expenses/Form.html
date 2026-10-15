@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>支出の確認・編集</title>
+</head>
+<body>
+  <h1>支出の確認・編集</h1>
+  <form th:action="@{/expenses}" th:object="${expense}" method="post">
+    <!-- 画面には出さないが、保存に必要な項目 -->
+    <input type="hidden" th:field="*{id}">
+    <input type="hidden" th:field="*{userId}">
+
+    支出日：<input type="date" th:field="*{expenseDate}">
+    <span th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}" style="color:red"></span><br>
+
+    品目名：<input type="text" th:field="*{itemName}">
+    <span th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}" style="color:red"></span><br>
+
+    金額（円）：<input type="number" step="any" th:field="*{amountJpy}">
+    <span th:if="${#fields.hasErrors('amountJpy')}" th:errors="*{amountJpy}" style="color:red"></span><br>
+
+    カテゴリ：
+    <select th:field="*{category}">
+      <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"></option>
+    </select><br>
+
+    元通貨（外貨のとき）：<input type="text" maxlength="3" th:field="*{originalCurrency}"><br>
+    元金額（外貨のとき）：<input type="number" step="any" th:field="*{originalAmount}"><br>
+
+    <button type="submit">保存</button>
+    <a th:href="@{/expenses}">一覧へ戻る</a>
+  </form>
+</body>
+</html>
