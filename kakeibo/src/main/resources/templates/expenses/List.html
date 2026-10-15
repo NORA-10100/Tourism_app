@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>家計簿</title>
+</head>
+<body>
+  <h1>支出一覧</h1>
+  <a th:href="@{/expenses/new}">新規登録</a>
+  <table border="1">
+    <tr>
+      <th>支出日</th><th>品目名</th><th>金額（円）</th><th>カテゴリ</th><th>元通貨</th><th>元金額</th><th></th>
+    </tr>
+    <tr th:each="e : ${expenses}">
+      <td th:text="${e.expenseDate}"></td>
+      <td th:text="${e.itemName}"></td>
+      <td th:text="${e.amountJpy}"></td>
+      <td th:text="${e.category}"></td>
+      <td th:text="${e.originalCurrency}"></td>
+      <td th:text="${e.originalAmount}"></td>
+      <td><a th:href="@{/expenses/{id}/edit(id=${e.id})}">編集</a></td>
+    </tr>
+  </table>
+</body>
+</html>
