@@ -38,7 +38,7 @@ public class ExpenseController {
     @GetMapping
     public String list(Model model) {
         model.addAttribute("expenses", repository.findByUserIdOrderByExpenseDateDesc(DEV_USER_ID));
-        return "expenses/list";
+        return "expenses/List";
     }
 
     // 新規入力フォーム
@@ -49,7 +49,7 @@ public class ExpenseController {
         expense.setExpenseDate(LocalDate.now());
         model.addAttribute("expense", expense);
         model.addAttribute("categories", CATEGORIES);
-        return "expenses/form";
+        return "expenses/Form";
     }
 
     // 編集フォーム
@@ -58,7 +58,7 @@ public class ExpenseController {
         Expense expense = repository.findById(id).orElseThrow();
         model.addAttribute("expense", expense);
         model.addAttribute("categories", CATEGORIES);
-        return "expenses/form";
+        return "expenses/Form";
     }
 
     // 保存（id が空なら新規登録、id があれば更新）
@@ -67,7 +67,7 @@ public class ExpenseController {
                        BindingResult result, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("categories", CATEGORIES);
-            return "expenses/form";
+            return "expenses/Form";
         }
         repository.save(expense);
         return "redirect:/expenses";
