@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン成功 | 家計簿</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
+    .container { width: 100%; max-width: 480px; padding: 16px; text-align: center; }
+    h1 { font-size: 22px; }
+    .actions a { display: inline-block; margin-top: 12px; padding: 12px 20px; background: #2b6cb0; color: #fff; text-decoration: none; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ログイン成功</h1>
+    <p>ログインしました。</p>
+    <div class="actions"><a th:href="@{/expenses}">支出一覧へ</a></div>
+  </div>
+</body>
+</html>

@@ -1,10 +1,11 @@
-//コントローラーのコード仮
-package com.example.demo.controller;
+package com.example.kakeibo;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AuthController {
@@ -77,6 +78,21 @@ public class AuthController {
     @GetMapping("/register")
     public String register() {
         return "register";
+    }
+
+    // 新規登録処理（仮実装：登録して即ログイン扱いにする）
+    @PostMapping("/register")
+    public String doRegister(
+            @RequestParam String username,
+            @RequestParam String email,
+            @RequestParam String password,
+            HttpSession session) {
+
+        // 現段階では仮の登録（セッションにログイン状態を持たせる）
+        session.setAttribute("loggedIn", true);
+        session.setAttribute("username", username);
+
+        return "redirect:/login/success";
     }
 
     // ⑤ ログアウト確認画面

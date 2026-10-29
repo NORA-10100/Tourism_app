@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログアウト | 家計簿</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
+    .container { width: 100%; max-width: 480px; padding: 16px; text-align: center; }
+    h1 { font-size: 22px; }
+    form { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+    button { width: 100%; padding: 12px; background: #c53030; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ログアウト</h1>
+    <p>ログアウトしますか？</p>
+    <form th:action="@{/logout}" method="post">
+      <button type="submit">ログアウトする</button>
+    </form>
+    <p class="link"><a th:href="@{/language}">キャンセル</a></p>
+  </div>
+</body>
+</html>
