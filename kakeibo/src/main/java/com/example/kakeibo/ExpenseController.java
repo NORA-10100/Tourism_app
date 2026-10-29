@@ -119,4 +119,11 @@ public class ExpenseController {
 
         return "expenses/Graph";
     }
+
+    // 支出の削除（編集画面から削除できるようにする追加機能）
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Integer id) {
+        repository.deleteById(id);
+        return "redirect:/expenses";
+    }
 }

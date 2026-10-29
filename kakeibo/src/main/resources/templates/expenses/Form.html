@@ -31,6 +31,7 @@
       font-size: 16px;
     }
     .back-link { display: inline-block; margin-top: 12px; color: #2b6cb0; text-decoration: none; }
+    .delete-btn { width: 100%; padding: 12px; background: #c53030; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -80,6 +81,10 @@
         <button type="submit">保存</button>
       </div>
       <a class="back-link" th:href="@{/expenses}">一覧へ戻る</a>
+    </form>
+
+    <form th:if="${expense.id != null}" th:action="@{/expenses/{id}/delete(id=${expense.id})}" method="post">
+      <button type="submit" class="delete-btn">削除</button>
     </form>
   </div>
 </body>
