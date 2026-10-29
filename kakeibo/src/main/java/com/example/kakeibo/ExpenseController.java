@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 /**
  * 家計簿（支出）の画面。基本設計書 2-2-1「支出確認・編集画面」に相当する部分。
@@ -26,8 +31,26 @@ import jakarta.validation.Valid;
 @RequestMapping("/expenses")
 public class ExpenseController {
 
-    // ログイン機能ができるまでの仮の端末ID（設計書：端末識別ID・匿名）
-    private static final String DEV_USER_ID = "dev-device-001";
+    private String userId(HttpSession session) {
+        return (String) session.getAttribute("expenseUserId");
+    }
+
+    @InitBinder("expense")
+    public void bindExpense(WebDataBinder binder) {
+        binder.setDisallowedFields("userId", "createdAt");
+    }
+
+    @ModelAttribute("expense")
+    public Expense expense(HttpSession session) {
+        Expense expense = new Expense();
+        expense.setUserId(userId(session));
+        return expense;
+    }
+
+    private Expense ownedExpense(Integer id, HttpSession session) {
+        return repository.findByIdAndUserId(id, userId(session))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
 
     // 設計書：食事/交通/宿泊/観光/その他
     private static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
@@ -40,16 +63,16 @@ public class ExpenseController {
 
     // 一覧
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("expenses", repository.findByUserIdOrderByExpenseDateDesc(DEV_USER_ID));
+    public String list(Model model, HttpSession session) {
+        model.addAttribute("expenses", repository.findByUserIdOrderByExpenseDateDesc(userId(session)));
         return "expenses/List";
     }
 
     // 新規入力フォーム
     @GetMapping("/new")
-    public String form(Model model) {
+    public String form(Model model, HttpSession session) {
         Expense expense = new Expense();
-        expense.setUserId(DEV_USER_ID);
+        expense.setUserId(userId(session));
         expense.setExpenseDate(LocalDate.now());
         model.addAttribute("expense", expense);
         model.addAttribute("categories", CATEGORIES);
@@ -58,8 +81,8 @@ public class ExpenseController {
 
     // 編集フォーム
     @GetMapping("/{id}/edit")
-    public String edit(@PathVariable Integer id, Model model) {
-        Expense expense = repository.findById(id).orElseThrow();
+    public String edit(@PathVariable Integer id, Model model, HttpSession session) {
+        Expense expense = ownedExpense(id, session);
         model.addAttribute("expense", expense);
         model.addAttribute("categories", CATEGORIES);
         return "expenses/Form";
@@ -68,7 +91,10 @@ public class ExpenseController {
     // 保存（id が空なら新規登録、id があれば更新）
     @PostMapping
     public String save(@Valid @ModelAttribute("expense") Expense expense,
-                       BindingResult result, Model model) {
+                       BindingResult result, Model model, HttpSession session) {
+        if (expense.getId() != null) {
+            ownedExpense(expense.getId(), session);
+        }
         if (result.hasErrors()) {
             model.addAttribute("categories", CATEGORIES);
             return "expenses/Form";

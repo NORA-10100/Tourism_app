@@ -1,40 +1,71 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ログイン | 家計簿</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { width: 100%; max-width: 480px; padding: 16px; }
-    h1 { font-size: 22px; margin-top: 0; }
-    form { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
-    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-    .error { color: #c53030; font-size: 13px; margin-bottom: 12px; }
-    button { width: 100%; padding: 12px; background: #2b6cb0; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
-    .link { display: block; margin-top: 12px; text-align: center; }
-    .link a { color: #2b6cb0; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログイン</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, .description { text-align: center; }
+        label { display: block; margin-top: 18px; }
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 24px;
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .error { color: #c62828; }
+        .success { color: #16803c; }
+        .links { text-align: center; margin-top: 20px; }
+    </style>
 </head>
 <body>
-  <div class="container">
+<main>
     <h1>ログイン</h1>
+    <p class="description">沖縄観光支援AIシステム</p>
+
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+    <p class="success" th:if="${message}" th:text="${message}"></p>
+
     <form th:action="@{/login}" method="post">
-      <div class="field">
         <label for="email">メールアドレス</label>
-        <input type="email" id="email" name="email" th:value="${email}" required>
-      </div>
-      <div class="field">
+        <input id="email" type="email" name="email"
+               autocomplete="username" required>
+
         <label for="password">パスワード</label>
-        <input type="password" id="password" name="password" required>
-      </div>
-      <div class="error" th:if="${error}" th:text="${error}"></div>
-      <button type="submit">ログイン</button>
-      <p class="link"><a th:href="@{/register}">新規登録はこちら</a></p>
+        <input id="password" type="password" name="password"
+               autocomplete="current-password" required>
+
+        <button type="submit">ログイン</button>
     </form>
-  </div>
+
+    <div class="links">
+        <a th:href="@{/register}">新規登録はこちら</a>
+        <p><a th:href="@{/language}">言語選択に戻る</a></p>
+    </div>
+</main>
 </body>
 </html>

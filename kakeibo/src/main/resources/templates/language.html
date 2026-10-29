@@ -1,36 +1,55 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>言語選択 | 家計簿</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { width: 100%; max-width: 480px; padding: 16px; }
-    h1 { font-size: 22px; margin-top: 0; }
-    form { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
-    select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-    button { width: 100%; padding: 12px; background: #2b6cb0; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>言語選択</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, p { text-align: center; }
+        button, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        button {
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>言語を選択してください</h1>
+<main>
+    <h1>言語選択</h1>
+    <p>使用する言語を選択してください。</p>
+
     <form th:action="@{/language}" method="post">
-      <div class="field">
-        <label>言語</label>
-        <select name="language">
-          <option value="ja">日本語</option>
-          <option value="en">English</option>
-          <option value="zh">中文</option>
-          <option value="ko">한국어</option>
+        <select name="language" required>
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="ko">한국어</option>
         </select>
-      </div>
-      <button type="submit">決定する</button>
+        <button type="submit">次へ</button>
     </form>
-  </div>
+</main>
 </body>
 </html>

@@ -1,0 +1,201 @@
+@charset "UTF-8";
+/* 全体 */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: #101010;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #101010;
+    color: white;
+    font-family: Arial, "Meiryo", sans-serif;
+}
+
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible {
+    outline: 3px solid #afeeee;
+    outline-offset: 3px;
+}
+
+/* スマホ画面 */
+.app-shell {
+    position: relative;
+    max-width: 390px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding-bottom: 100px;
+
+    border: 1px solid #505050;
+    border-radius: 25px;
+    overflow: hidden;
+
+    background-color: #151515;
+    background-image:
+        linear-gradient(#afeeee17 1px, transparent 1px),
+        linear-gradient(90deg, #afeeee17 1px, transparent 1px);
+    background-size: 12px 12px;
+}
+
+/* ヘッダー */
+.app-header {
+    height: 65px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.back-link {
+    color: white;
+    font-size: 35px;
+    text-decoration: none;
+    line-height: 1;
+    min-width: 35px;
+}
+
+.header-title {
+    font-size: 16px;
+}
+
+.header-placeholder {
+    width: 35px;
+}
+
+.profile-link {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #777;
+    border-radius: 50%;
+    color: white;
+    text-decoration: none;
+    font-size: 10px;
+}
+
+/* ユーザー名 */
+.greeting {
+    margin: 15px 16px 35px;
+    text-align: center;
+    font-size: 18px;
+}
+
+/* メニュー配置 */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 25px;
+    margin: 0 35px;
+}
+
+/* 機能ボタン */
+.feature-card {
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px;
+
+    border: 1px solid #777;
+    background: #101010;
+    color: white;
+
+    text-align: center;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.feature-card:hover {
+    background: #213437;
+    border-color: #afeeee;
+}
+
+/* 遷移先画面 */
+.feature-content {
+    min-height: 55vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.feature-content h1 {
+    margin: 0 0 15px;
+    font-size: 23px;
+    font-weight: 600;
+}
+
+.feature-content p {
+    color: #c8d5d6;
+    font-size: 13px;
+}
+
+/* 下部ナビゲーション */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 100%;
+    max-width: 390px;
+    min-height: 75px;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 5px;
+
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+    background: #151515;
+    border-top: 1px solid #555;
+    z-index: 10;
+}
+
+.nav-item {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+
+    border: 1px solid #666;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #101010;
+    color: white;
+    text-decoration: none;
+    font-size: 10px;
+    text-align: center;
+}
+
+.nav-item.is-active {
+    background: #303030;
+    border-color: #aaa;
+}
+
+/* 小さなスマホへの対応 */
+@media (max-width: 390px) {
+    .app-shell {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .feature-grid {
+        margin: 0 25px;
+        gap: 20px;
+    }
+}
