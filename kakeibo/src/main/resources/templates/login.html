@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログイン</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, .description { text-align: center; }
+        label { display: block; margin-top: 18px; }
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 24px;
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .error { color: #c62828; }
+        .success { color: #16803c; }
+        .links { text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>ログイン</h1>
+    <p class="description">沖縄観光支援AIシステム</p>
+
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+    <p class="success" th:if="${message}" th:text="${message}"></p>
+
+    <form th:action="@{/login}" method="post">
+        <label for="email">メールアドレス</label>
+        <input id="email" type="email" name="email"
+               autocomplete="username" required>
+
+        <label for="password">パスワード</label>
+        <input id="password" type="password" name="password"
+               autocomplete="current-password" required>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <div class="links">
+        <a th:href="@{/register}">新規登録はこちら</a>
+        <p><a th:href="@{/language}">言語選択に戻る</a></p>
+    </div>
+</main>
+</body>
+</html>

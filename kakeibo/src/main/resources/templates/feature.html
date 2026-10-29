@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title th:text="${featureTitle}">機能画面</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/app.css}">
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+
+        <a class="back-link"
+           th:href="@{/home}"
+           aria-label="ホームに戻る">‹</a>
+
+        <span class="header-title"
+              th:text="${featureTitle}">
+            機能画面
+        </span>
+
+        <span class="header-placeholder"></span>
+    </header>
+
+    <!-- 仮の機能画面 -->
+    <main class="feature-content">
+        <div>
+            <h1>test画面</h1>
+
+            <p th:text="|${featureTitle} の機能は今後実装します。|">
+                各機能は今後実装します。
+            </p>
+        </div>
+    </main>
+
+    <!-- 下部メニュー -->
+    <nav class="bottom-nav">
+
+        <a class="nav-item"
+           th:href="@{/home}">ホーム</a>
+
+        <a class="nav-item"
+           th:href="@{/features/spots}">スポット</a>
+
+        <a class="nav-item"
+           th:href="@{/features/receipts}">家計簿</a>
+
+        <a class="nav-item"
+           th:href="@{/features/settings}">設定</a>
+
+    </nav>
+
+</div>
+</body>
+</html>
