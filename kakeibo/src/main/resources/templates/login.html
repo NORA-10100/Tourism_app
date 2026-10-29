@@ -1,40 +1,71 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ログイン | Vita</title>
-  <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログイン</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, .description { text-align: center; }
+        label { display: block; margin-top: 18px; }
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 24px;
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .error { color: #c62828; }
+        .success { color: #16803c; }
+        .links { text-align: center; margin-top: 20px; }
+    </style>
 </head>
 <body>
-  <main class="auth-card">
-    <span class="brand">Vita / ログイン</span>
-    <h1>おかえりなさい</h1>
-    <p class="lead">メールアドレスとパスワードを入力してください。</p>
+<main>
+    <h1>ログイン</h1>
+    <p class="description">沖縄観光支援AIシステム</p>
 
-    <div class="message" th:if="${message}" th:text="${message}"></div>
-    <div class="error" th:if="${error}" th:text="${error}"></div>
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+    <p class="success" th:if="${message}" th:text="${message}"></p>
 
     <form th:action="@{/login}" method="post">
-      <div class="field">
         <label for="email">メールアドレス</label>
-        <input id="email" type="email" name="email" th:value="${email}"
-               placeholder="you@example.com" autocomplete="username" required>
-      </div>
-      <div class="field">
+        <input id="email" type="email" name="email"
+               autocomplete="username" required>
+
         <label for="password">パスワード</label>
         <input id="password" type="password" name="password"
-               placeholder="8文字以上" autocomplete="current-password" required>
-      </div>
-      <button class="btn btn-primary" type="submit">ログイン</button>
+               autocomplete="current-password" required>
+
+        <button type="submit">ログイン</button>
     </form>
 
-    <p class="hint">仮アカウント：test@example.com / Test1234</p>
-
-    <p class="auth-footer">
-      アカウントをお持ちでない方は <a th:href="@{/register}">新規登録</a><br>
-      <a th:href="@{/language}">言語を変更する</a>
-    </p>
-  </main>
+    <div class="links">
+        <a th:href="@{/register}">新規登録はこちら</a>
+        <p><a th:href="@{/language}">言語選択に戻る</a></p>
+    </div>
+</main>
 </body>
 </html>

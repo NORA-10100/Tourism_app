@@ -1,23 +1,31 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vita 沖縄観光支援AI</title>
-  <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>沖縄観光支援AIシステム</title>
+    <meta http-equiv="refresh"
+          th:content="|2;url=@{/language}|">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #0077b6, #48cae4);
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+        }
+        h1 { font-size: 2rem; }
+        p { margin-top: 20px; }
+    </style>
 </head>
-<body class="splash">
-  <div class="splash-screen">
-    <div class="splash-inner">
-      <span class="brand">Vita / Okinawa</span>
-      <h1>沖縄の旅を、<br>もっと自由に。</h1>
-      <p class="lead">
-        観光スポット・混雑状況・旅の支出まで。<br>
-        あなたの沖縄旅行をひとつのアプリでサポートします。
-      </p>
-      <a class="btn btn-coral" th:href="@{/language}">はじめる</a>
-      <p class="splash-note">OKINAWA TRAVEL SUPPORT AI</p>
-    </div>
-  </div>
+<body>
+    <main>
+        <h1>沖縄観光支援AIシステム</h1>
+        <p>Okinawa Tourism Support AI</p>
+        <p>起動しています...</p>
+    </main>
 </body>
 </html>

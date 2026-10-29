@@ -7,6 +7,10 @@
     return;
   }
   var scanUrl = scanUrlMeta.content;
+  var csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+  var csrfHeaderMeta = document.querySelector('meta[name="csrf-header"]');
+  var csrfToken = csrfTokenMeta ? csrfTokenMeta.content : "";
+  var csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.content : "";
 
   var fileInput = document.getElementById("file");
   var form = document.getElementById("scan-form");
@@ -149,7 +153,11 @@
     body.append("file", file);
 
     try {
-      var response = await fetch(scanUrl, { method: "POST", body: body });
+      var options = { method: "POST", body: body, headers: {} };
+      if (csrfToken && csrfHeader) {
+        options.headers[csrfHeader] = csrfToken;
+      }
+      var response = await fetch(scanUrl, options);
       var data = await response.json().catch(function () {
         return {};
       });

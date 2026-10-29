@@ -1,27 +1,55 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>言語を選択 | Vita</title>
-  <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>言語選択</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, p { text-align: center; }
+        button, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        button {
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <main class="auth-card auth-card--wide">
-    <span class="brand">Vita / 言語</span>
-    <h1>表示する言語を<span class="accent">選んでください</span></h1>
-    <p class="lead">Choose your language. この設定はログイン後の画面でも使用します。</p>
+<main>
+    <h1>言語選択</h1>
+    <p>使用する言語を選択してください。</p>
 
     <form th:action="@{/language}" method="post">
-      <div class="lang-grid">
-        <button class="lang-card" type="submit" name="language" value="ja">日本語<span>Japanese</span></button>
-        <button class="lang-card" type="submit" name="language" value="en">English<span>英語</span></button>
-        <button class="lang-card" type="submit" name="language" value="zh">中文<span>中国語</span></button>
-        <button class="lang-card" type="submit" name="language" value="ko">한국어<span>韓国語</span></button>
-      </div>
+        <select name="language" required>
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="ko">한국어</option>
+        </select>
+        <button type="submit">次へ</button>
     </form>
-
-    <p class="auth-footer">言語はあとから変更できます。</p>
-  </main>
+</main>
 </body>
 </html>

@@ -1,21 +1,50 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ログアウト | Vita</title>
-  <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログアウト確認</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 70px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 18px #0001;
+        }
+        button {
+            padding: 12px 25px;
+            margin: 8px;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .logout-button {
+            background: #c62828;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-  <main class="auth-card">
-    <span class="brand">Vita / ログアウト</span>
-    <h1>ログアウトしますか？</h1>
-    <p class="lead">保存していない内容は失われます。よろしければ下のボタンを押してください。</p>
+<main>
+    <h1>ログアウト確認</h1>
+    <p>ログアウトしてもよろしいですか？</p>
 
     <form th:action="@{/logout}" method="post">
-      <button class="btn btn-coral" type="submit">ログアウトする</button>
+        <button class="logout-button" type="submit">
+            ログアウトする
+        </button>
     </form>
-    <a class="btn btn-ghost" th:href="@{/login/success}">キャンセル</a>
-  </main>
+
+    <p><a th:href="@{/home}">キャンセル</a></p>
+</main>
 </body>
 </html>

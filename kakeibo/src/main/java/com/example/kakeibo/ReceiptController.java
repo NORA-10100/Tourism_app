@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpSession;
+
 /**
  * レシート読み取り（OCR）と、読み取った支出の登録。
  * 基本設計書 2-1-1「レシート撮影（OCR）」／2-2-1「支出確認・編集画面」に対応。
@@ -33,9 +35,16 @@ public class ReceiptController {
         this.repository = repository;
     }
 
+    private static String userId(HttpSession session) {
+        return (String) session.getAttribute("expenseUserId");
+    }
+
     // レシート撮影・アップロード画面
     @GetMapping("/receipts/scan")
-    public String scan(Model model) {
+    public String scan(Model model, HttpSession session) {
+        if (userId(session) == null) {
+            return "redirect:/login";
+        }
         model.addAttribute("categories", ExpenseController.CATEGORIES);
         return "receipts/scan";
     }
@@ -44,7 +53,13 @@ public class ReceiptController {
     @PostMapping("/api/receipts/scan")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> scanApi(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            HttpSession session) {
+
+        if (userId(session) == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "ログインしてください。"));
+        }
 
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest()
@@ -92,7 +107,13 @@ public class ReceiptController {
             @RequestParam String category,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) BigDecimal originalAmount,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
+
+        String userId = userId(session);
+        if (userId == null) {
+            return "redirect:/login";
+        }
 
         if (itemName == null || itemName.isBlank()) {
             redirectAttributes.addFlashAttribute("error", "品目名を入力してください。");
@@ -104,7 +125,7 @@ public class ReceiptController {
         }
 
         Expense expense = new Expense();
-        expense.setUserId(ExpenseController.DEV_USER_ID);
+        expense.setUserId(userId);
         expense.setItemName(itemName.trim());
         expense.setAmountJpy(amountJpy);
         expense.setExpenseDate(expenseDate);

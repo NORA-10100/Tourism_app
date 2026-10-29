@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="scan-url" th:content="@{/api/receipts/scan}">
+  <meta name="csrf-token" th:content="${_csrf != null ? _csrf.token : ''}">
+  <meta name="csrf-header" th:content="${_csrf != null ? _csrf.headerName : ''}">
   <title>レシート読み取り | Vita</title>
   <link rel="stylesheet" th:href="@{/css/auth.css}">
   <link rel="stylesheet" th:href="@{/css/receipt.css}">
