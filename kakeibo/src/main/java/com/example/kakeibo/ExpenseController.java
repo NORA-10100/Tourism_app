@@ -74,7 +74,7 @@ public class ExpenseController {
             return "expenses/Form";
         }
         repository.save(expense);
-        return "redirect:/expenses";
+        return "redirect:/expenses/graph";
     }
 
     // 支出グラフ画面（日別・カテゴリ別の合計、合計金額・外貨換算を表示する）
