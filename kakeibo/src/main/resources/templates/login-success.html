@@ -1,22 +1,47 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ログイン成功 | 家計簿</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { width: 100%; max-width: 480px; padding: 16px; text-align: center; }
-    h1 { font-size: 22px; }
-    .actions a { display: inline-block; margin-top: 12px; padding: 12px 20px; background: #2b6cb0; color: #fff; text-decoration: none; border-radius: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ログイン成功</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 500px;
+            margin: 70px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 18px #0001;
+        }
+        button {
+            padding: 12px 25px;
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
+<main>
     <h1>ログイン成功</h1>
-    <p>ログインしました。</p>
-    <div class="actions"><a th:href="@{/expenses}">支出一覧へ</a></div>
-  </div>
+    <p>
+        <span th:text="${session.username}">ユーザー</span>
+        さん、ログインしました。
+    </p>
+    <p>これは動作確認用の画面です。</p>
+
+    <p>
+        <a th:href="@{/logout/confirm}">ログアウト</a>
+    </p>
+</main>
 </body>
 </html>

@@ -21,23 +21,22 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>支出一覧</h1>
-    <a class="add-link" th:href="@{/expenses/new}">支出を追加する</a>
-
-    <div class="list">
-      <div class="card" th:each="e : ${expenses}">
-        <div class="row">
-          <span class="date" th:text="${e.expenseDate}">2026-10-20</span>
-          <span class="amount" th:text="${e.amountJpy}">0</span><span>円</span>
-        </div>
-        <div class="item" th:text="${e.itemName}">品目名</div>
-        <div class="category" th:text="${e.category}">カテゴリ</div>
-        <div class="edit"><a th:href="@{/expenses/{id}/edit(id=${e.id})}">編集</a></div>
-      </div>
-    </div>
-
-    <a th:href="@{/expenses/graph}">支出グラフを見る</a>
-  </div>
+  <nav><a th:href="@{/home}">ホームへ戻る</a> | <a th:href="@{/logout/confirm}">ログアウト</a></nav>
+  <h1>支出一覧</h1>
+  <a th:href="@{/expenses/new}">新規登録</a>
+  <table border="1">
+    <tr>
+      <th>支出日</th><th>品目名</th><th>金額（円）</th><th>カテゴリ</th><th>元通貨</th><th>元金額</th><th></th>
+    </tr>
+    <tr th:each="e : ${expenses}">
+      <td th:text="${e.expenseDate}"></td>
+      <td th:text="${e.itemName}"></td>
+      <td th:text="${e.amountJpy}"></td>
+      <td th:text="${e.category}"></td>
+      <td th:text="${e.originalCurrency}"></td>
+      <td th:text="${e.originalAmount}"></td>
+      <td><a th:href="@{/expenses/{id}/edit(id=${e.id})}">編集</a></td>
+    </tr>
+  </table>
 </body>
 </html>

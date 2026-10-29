@@ -1,42 +1,79 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>新規登録 | 家計簿</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { width: 100%; max-width: 480px; padding: 16px; }
-    h1 { font-size: 22px; margin-top: 0; }
-    form { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
-    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
-    button { width: 100%; padding: 12px; background: #2b6cb0; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
-    .link { display: block; margin-top: 12px; text-align: center; }
-    .link a { color: #2b6cb0; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>新規登録</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        main {
+            max-width: 420px;
+            margin: 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px #0001;
+        }
+        h1, .description { text-align: center; }
+        label { display: block; margin-top: 16px; }
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 24px;
+            color: white;
+            background: #0077b6;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .error { color: #c62828; }
+        .links { text-align: center; margin-top: 20px; }
+    </style>
 </head>
 <body>
-  <div class="container">
+<main>
     <h1>新規登録</h1>
+    <p class="description">アカウントを作成してください。</p>
+
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+
     <form th:action="@{/register}" method="post">
-      <div class="field">
-        <label for="username">ユーザ名</label>
-        <input type="text" id="username" name="username" required>
-      </div>
-      <div class="field">
+        <label for="username">ユーザー名（1～15文字）</label>
+        <input id="username" type="text" name="username"
+               maxlength="15" autocomplete="name" required>
+
         <label for="email">メールアドレス</label>
-        <input type="email" id="email" name="email" required>
-      </div>
-      <div class="field">
+        <input id="email" type="email" name="email"
+               maxlength="255" autocomplete="email" required>
+
         <label for="password">パスワード</label>
-        <input type="password" id="password" name="password" required>
-      </div>
-      <button type="submit">登録する</button>
-      <p class="link"><a th:href="@{/login}">ログイン画面へ戻る</a></p>
+        <input id="password" type="password" name="password"
+               minlength="8" maxlength="16"
+               autocomplete="new-password" required>
+        <small>8～16文字で、大文字・小文字・数字を含めてください。</small>
+
+        <label for="confirmPassword">パスワード（確認用）</label>
+        <input id="confirmPassword" type="password"
+               name="confirmPassword" minlength="8" maxlength="16"
+               autocomplete="new-password" required>
+
+        <button type="submit">登録する</button>
     </form>
-  </div>
+
+    <div class="links">
+        <a th:href="@{/login}">ログイン画面に戻る</a>
+    </div>
+</main>
 </body>
 </html>

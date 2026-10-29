@@ -35,12 +35,12 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>支出の確認・編集</h1>
-    <form th:action="@{/expenses}" th:object="${expense}" method="post">
-      <!-- 画面には出さないが、保存に必要な項目 -->
-      <input type="hidden" th:field="*{id}">
-      <input type="hidden" th:field="*{userId}">
+  <nav><a th:href="@{/home}">ホームへ戻る</a> | <a th:href="@{/logout/confirm}">ログアウト</a></nav>
+  <h1>支出の確認・編集</h1>
+  <form th:action="@{/expenses}" th:object="${expense}" method="post">
+    <!-- 画面には出さないが、保存に必要な項目 -->
+    <input type="hidden" th:field="*{id}">
+
 
       <div class="field">
         支出日：
