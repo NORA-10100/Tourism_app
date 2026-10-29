@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログイン | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+  <main class="auth-card">
+    <span class="brand">Vita / ログイン</span>
+    <h1>おかえりなさい</h1>
+    <p class="lead">メールアドレスとパスワードを入力してください。</p>
+
+    <div class="message" th:if="${message}" th:text="${message}"></div>
+    <div class="error" th:if="${error}" th:text="${error}"></div>
+
+    <form th:action="@{/login}" method="post">
+      <div class="field">
+        <label for="email">メールアドレス</label>
+        <input id="email" type="email" name="email" th:value="${email}"
+               placeholder="you@example.com" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">パスワード</label>
+        <input id="password" type="password" name="password"
+               placeholder="8文字以上" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit">ログイン</button>
+    </form>
+
+    <p class="hint">仮アカウント：test@example.com / Test1234</p>
+
+    <p class="auth-footer">
+      アカウントをお持ちでない方は <a th:href="@{/register}">新規登録</a><br>
+      <a th:href="@{/language}">言語を変更する</a>
+    </p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログアウト | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+  <main class="auth-card">
+    <span class="brand">Vita / ログアウト</span>
+    <h1>ログアウトしますか？</h1>
+    <p class="lead">保存していない内容は失われます。よろしければ下のボタンを押してください。</p>
+
+    <form th:action="@{/logout}" method="post">
+      <button class="btn btn-coral" type="submit">ログアウトする</button>
+    </form>
+    <a class="btn btn-ghost" th:href="@{/login/success}">キャンセル</a>
+  </main>
+</body>
+</html>

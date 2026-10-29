@@ -1,10 +1,11 @@
 //コントローラーのコード仮
-package com.example.demo.controller;
+package com.example.kakeibo;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -51,6 +52,7 @@ public class AuthController {
                 && "Test1234".equals(password)) {
 
             session.setAttribute("loggedIn", true);
+            session.setAttribute("loginEmail", email);
 
             // ホーム画面は今回作らない
             return "redirect:/login/success";
@@ -59,6 +61,7 @@ public class AuthController {
         model.addAttribute(
                 "error",
                 "メールアドレスまたはパスワードが違います。");
+        model.addAttribute("email", email);
 
         return "login";
     }
@@ -77,6 +80,43 @@ public class AuthController {
     @GetMapping("/register")
     public String register() {
         return "register";
+    }
+
+    // 新規登録処理（仮実装：DBには保存しない。users テーブル接続は未実装）
+    @PostMapping("/register")
+    public String doRegister(
+            @RequestParam String username,
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String passwordConfirm,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        String error = null;
+
+        if (username == null || username.isBlank()) {
+            error = "ユーザー名を入力してください。";
+        } else if (email == null || !email.contains("@")) {
+            error = "メールアドレスの形式が正しくありません。";
+        } else if (password == null || password.length() < 8) {
+            error = "パスワードは8文字以上で入力してください。";
+        } else if (!password.equals(passwordConfirm)) {
+            error = "パスワードが一致しません。";
+        }
+
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("username", username);
+            model.addAttribute("email", email);
+            return "register";
+        }
+
+        // TODO: users テーブルへ保存する（DB課題）
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "アカウント登録を受け付けました（仮実装）。ログインしてください。");
+
+        return "redirect:/login";
     }
 
     // ⑤ ログアウト確認画面

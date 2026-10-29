@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>言語を選択 | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+  <main class="auth-card auth-card--wide">
+    <span class="brand">Vita / 言語</span>
+    <h1>表示する言語を<span class="accent">選んでください</span></h1>
+    <p class="lead">Choose your language. この設定はログイン後の画面でも使用します。</p>
+
+    <form th:action="@{/language}" method="post">
+      <div class="lang-grid">
+        <button class="lang-card" type="submit" name="language" value="ja">日本語<span>Japanese</span></button>
+        <button class="lang-card" type="submit" name="language" value="en">English<span>英語</span></button>
+        <button class="lang-card" type="submit" name="language" value="zh">中文<span>中国語</span></button>
+        <button class="lang-card" type="submit" name="language" value="ko">한국어<span>韓国語</span></button>
+      </div>
+    </form>
+
+    <p class="auth-footer">言語はあとから変更できます。</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,323 @@
+/* ログイン・新規登録まわりの共通スタイル（仮デザイン） */
+:root {
+  --sea-900: #083344;
+  --sea-700: #0e7490;
+  --sea-500: #06b6d4;
+  --coral-500: #fb7185;
+  --coral-600: #f43f5e;
+  --sand-50: #fffaf3;
+  --ink: #12313c;
+  --ink-muted: #5b7683;
+  --line: #d7e6eb;
+  --danger: #b91c1c;
+  --success: #047857;
+  --radius: 18px;
+  --shadow: 0 18px 40px rgba(8, 51, 68, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.28), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(251, 113, 133, 0.28), transparent 45%),
+    linear-gradient(160deg, #e6fbff 0%, var(--sand-50) 55%, #ffeef2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  backdrop-filter: blur(6px);
+}
+
+.auth-card--wide {
+  max-width: 620px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sea-700);
+}
+
+.brand::before {
+  content: "";
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, var(--sea-500), var(--coral-500), var(--sea-500));
+}
+
+h1 {
+  margin: 18px 0 10px;
+  font-size: 28px;
+  line-height: 1.35;
+}
+
+h1 .accent {
+  color: var(--coral-600);
+}
+
+.lead {
+  margin: 0 0 26px;
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sea-900);
+}
+
+.field input {
+  width: 100%;
+  padding: 13px 14px;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--sea-500);
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.18);
+}
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(120deg, var(--sea-700), var(--sea-500));
+  box-shadow: 0 10px 22px rgba(14, 116, 144, 0.28);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 14px 28px rgba(14, 116, 144, 0.34);
+}
+
+.btn-coral {
+  color: #fff;
+  background: linear-gradient(120deg, var(--coral-600), var(--coral-500));
+  box-shadow: 0 10px 22px rgba(244, 63, 94, 0.26);
+}
+
+.btn-ghost {
+  margin-top: 12px;
+  color: var(--sea-700);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.btn-ghost:hover {
+  background: #f2fbfd;
+}
+
+.message {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: var(--success);
+}
+
+.error {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--danger);
+}
+
+.auth-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.auth-footer a {
+  color: var(--sea-700);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* 言語選択 */
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.lang-card {
+  padding: 16px 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sea-900);
+  text-align: center;
+  background: #f7fdff;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+
+.lang-card span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.lang-card:hover {
+  border-color: var(--sea-500);
+  background: #ecfbff;
+  transform: translateY(-2px);
+}
+
+/* スプラッシュ */
+body.splash {
+  padding: 0;
+}
+
+.splash-screen {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: #fff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 75% 20%, rgba(251, 113, 133, 0.55), transparent 45%),
+    radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.6), transparent 50%),
+    linear-gradient(150deg, var(--sea-900), var(--sea-700) 60%, #0891b2);
+  overflow: hidden;
+}
+
+.splash-screen::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -30% -10%;
+  height: 45%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50% 50% 0 0;
+}
+
+.splash-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+}
+
+.splash-screen .brand {
+  color: #a5f3fc;
+}
+
+.splash-screen h1 {
+  font-size: 34px;
+  margin-top: 22px;
+}
+
+.splash-screen .lead {
+  color: #d8f7ff;
+  font-size: 16px;
+}
+
+.splash-screen .btn {
+  width: auto;
+  min-width: 220px;
+  margin: 8px auto 0;
+}
+
+.splash-note {
+  margin-top: 26px;
+  font-size: 12px;
+  color: #bae6fd;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 30px 22px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .lang-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .splash-screen h1 {
+    font-size: 27px;
+  }
+}

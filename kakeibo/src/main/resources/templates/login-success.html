@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログイン成功 | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+  <main class="auth-card">
+    <span class="brand">Vita / ログイン成功</span>
+    <h1>ログインしました</h1>
+    <p class="lead">
+      <span th:if="${session.loginEmail}" th:text="${session.loginEmail} + ' さん、'"></span>
+      ようこそ。ホーム画面はまだ作成中です。
+    </p>
+
+    <a class="btn btn-primary" th:href="@{/expenses}">家計簿（支出）を開く</a>
+    <a class="btn btn-ghost" th:href="@{/logout/confirm}">ログアウト</a>
+
+    <p class="auth-footer">この画面は仮の成功画面です。</p>
+  </main>
+</body>
+</html>
