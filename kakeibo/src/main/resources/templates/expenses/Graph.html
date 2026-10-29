@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支出グラフ | 家計簿</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f8; color: #333; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 22px; margin: 8px 0 16px; }
+    .card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+    .card h2 { font-size: 16px; margin: 0 0 12px; }
+    .total-card { text-align: center; }
+    .total-card .amount { font-size: 30px; font-weight: 700; }
+    canvas { width: 100%; height: 240px; }
+    .back-link { display: inline-block; margin-top: 8px; color: #2b6cb0; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>支出グラフ</h1>
+
+    <div class="card total-card">
+      <p style="margin: 0; font-size: 13px; color: #666;">合計支出金額（円）</p>
+      <p class="amount" th:text="${totalAmount}">0</p>
+      <p style="margin: 0; font-size: 13px; color: #666;">円</p>
+    </div>
+
+    <div class="card">
+      <h2>日別支出推移</h2>
+      <canvas id="dailyChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>カテゴリ別支出</h2>
+      <canvas id="categoryChart"></canvas>
+    </div>
+
+    <div class="card">
+      <a class="back-link" th:href="@{/expenses}">支出一覧へ戻る</a>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    const dailyLabels = [[${dailyLabels}]];
+    const dailyData = [[${dailyValues}]];
+    const categoryLabels = [[${categoryLabels}]];
+    const categoryData = [[${categoryValues}]];
+
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(dailyCtx, {
+      type: 'bar',
+      data: {
+        labels: dailyLabels,
+        datasets: [{
+          label: '支出金額（円）',
+          data: dailyData,
+          backgroundColor: 'rgba(43, 108, 176, 0.7)'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+      type: 'pie',
+      data: {
+        labels: categoryLabels,
+        datasets: [{
+          label: '支出金額（円）',
+          data: categoryData,
+          backgroundColor: [
+            'rgba(230, 126, 34, 0.7)',
+            'rgba(46, 204, 113, 0.7)',
+            'rgba(52, 152, 219, 0.7)',
+            'rgba(155, 89, 182, 0.7)',
+            'rgba(241, 196, 15, 0.7)'
+          ]
+        }]
+      },
+      options: { responsive: true }
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,11 @@
 package com.example.kakeibo;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -71,5 +75,48 @@ public class ExpenseController {
         }
         repository.save(expense);
         return "redirect:/expenses";
+    }
+
+    // 支出グラフ画面（日別・カテゴリ別の合計、合計金額・外貨換算を表示する）
+    @GetMapping("/graph")
+    public String graph(Model model) {
+        List<Expense> expenses = repository.findByUserIdOrderByExpenseDateDesc(DEV_USER_ID);
+
+        Map<LocalDate, BigDecimal> dailyTotals = new LinkedHashMap<>();
+        Map<String, BigDecimal> categoryTotals = new LinkedHashMap<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (Expense expense : expenses) {
+            BigDecimal amount = expense.getAmountJpy() == null ? BigDecimal.ZERO : expense.getAmountJpy();
+            LocalDate expenseDate = expense.getExpenseDate();
+            if (expenseDate != null) {
+                dailyTotals.merge(expenseDate, amount, BigDecimal::add);
+            }
+            categoryTotals.merge(expense.getCategory(), amount, BigDecimal::add);
+            totalAmount = totalAmount.add(amount);
+        }
+
+        List<String> dailyLabels = new ArrayList<>();
+        List<Double> dailyValues = new ArrayList<>();
+        for (Map.Entry<LocalDate, BigDecimal> entry : dailyTotals.entrySet()) {
+            dailyLabels.add(entry.getKey().toString());
+            dailyValues.add(entry.getValue().doubleValue());
+        }
+
+        List<String> categoryLabels = new ArrayList<>();
+        List<Double> categoryValues = new ArrayList<>();
+        for (Map.Entry<String, BigDecimal> entry : categoryTotals.entrySet()) {
+            categoryLabels.add(entry.getKey());
+            categoryValues.add(entry.getValue().doubleValue());
+        }
+
+        model.addAttribute("expenses", expenses);
+        model.addAttribute("dailyLabels", dailyLabels);
+        model.addAttribute("dailyValues", dailyValues);
+        model.addAttribute("categoryLabels", categoryLabels);
+        model.addAttribute("categoryValues", categoryValues);
+        model.addAttribute("totalAmount", totalAmount);
+
+        return "expenses/Graph";
     }
 }
