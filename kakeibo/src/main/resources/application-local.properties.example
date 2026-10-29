@@ -1,0 +1,11 @@
+# ローカル専用の設定ファイル（このファイルは .gitignore されている）
+# %USERPROFILE% 側ではなく、kakeibo/src/main/resources/application-local.properties に置く。
+#
+# 1) Oracle XE のパスワード
+spring.datasource.password=ここにvita_app_userのパスワード
+#
+# 2) Gemini API キー（https://aistudio.google.com/apikey で取得）
+gemini.api.key=ここにAPIキー
+#
+# 3) モデルを変えたいとき（任意）
+#gemini.api.model=gemini-2.5-flash

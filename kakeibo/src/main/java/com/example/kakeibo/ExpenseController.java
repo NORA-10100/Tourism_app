@@ -23,10 +23,10 @@ import jakarta.validation.Valid;
 public class ExpenseController {
 
     // ログイン機能ができるまでの仮の端末ID（設計書：端末識別ID・匿名）
-    private static final String DEV_USER_ID = "dev-device-001";
+    public static final String DEV_USER_ID = "dev-device-001";
 
     // 設計書：食事/交通/宿泊/観光/その他
-    private static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
+    public static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
 
     private final ExpenseRepository repository;
 
