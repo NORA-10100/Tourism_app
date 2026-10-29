@@ -2,25 +2,42 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>家計簿</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支出一覧 | 家計簿</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f8; color: #333; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 22px; margin: 8px 0 16px; }
+    .add-link { display: block; text-align: center; margin-bottom: 16px; padding: 12px; background: #2b6cb0; color: #fff; text-decoration: none; border-radius: 10px; font-size: 16px; }
+    .list { display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+    .card .row { display: flex; justify-content: space-between; align-items: baseline; }
+    .card .date { font-size: 12px; color: #888; }
+    .card .amount { font-size: 18px; font-weight: 700; }
+    .card .item { font-size: 16px; font-weight: 600; margin-top: 6px; }
+    .card .category { display: inline-block; margin-top: 6px; font-size: 12px; color: #2b6cb0; background: #eaf2fa; border-radius: 999px; padding: 2px 10px; }
+    .card .edit { display: inline-block; margin-top: 10px; color: #2b6cb0; text-decoration: none; }
+  </style>
 </head>
 <body>
-  <h1>支出一覧</h1>
-  <a th:href="@{/expenses/new}">新規登録</a>
-  <table border="1">
-    <tr>
-      <th>支出日</th><th>品目名</th><th>金額（円）</th><th>カテゴリ</th><th>元通貨</th><th>元金額</th><th></th>
-    </tr>
-    <tr th:each="e : ${expenses}">
-      <td th:text="${e.expenseDate}"></td>
-      <td th:text="${e.itemName}"></td>
-      <td th:text="${e.amountJpy}"></td>
-      <td th:text="${e.category}"></td>
-      <td th:text="${e.originalCurrency}"></td>
-      <td th:text="${e.originalAmount}"></td>
-      <td><a th:href="@{/expenses/{id}/edit(id=${e.id})}">編集</a></td>
-    </tr>
-  </table>
-  <a th:href="@{/expenses/graph}">支出グラフを見る</a>
+  <div class="container">
+    <h1>支出一覧</h1>
+    <a class="add-link" th:href="@{/expenses/new}">支出を追加する</a>
+
+    <div class="list">
+      <div class="card" th:each="e : ${expenses}">
+        <div class="row">
+          <span class="date" th:text="${e.expenseDate}">2026-10-20</span>
+          <span class="amount" th:text="${e.amountJpy}">0</span><span>円</span>
+        </div>
+        <div class="item" th:text="${e.itemName}">品目名</div>
+        <div class="category" th:text="${e.category}">カテゴリ</div>
+        <div class="edit"><a th:href="@{/expenses/{id}/edit(id=${e.id})}">編集</a></div>
+      </div>
+    </div>
+
+    <a th:href="@{/expenses/graph}">支出グラフを見る</a>
+  </div>
 </body>
 </html>
