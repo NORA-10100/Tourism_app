@@ -1,116 +1,47 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支出グラフ | 家計簿</title>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>支出グラフ | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #f4f6f8; color: #333; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 22px; margin: 8px 0 16px; }
-    .card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-    .card h2 { font-size: 16px; margin: 0 0 12px; }
-    .total-card { text-align: center; }
-    .total-card .amount { font-size: 30px; font-weight: 700; }
-    canvas { width: 100%; height: 240px; }
-    .back-link { display: inline-block; margin-top: 8px; color: #2b6cb0; text-decoration: none; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-    .tab { flex: 1; padding: 10px; background: #eaf2fa; color: #2b6cb0; border: none; border-radius: 10px; font-size: 15px; }
-    .tab.active { background: #2b6cb0; color: #fff; }
-    .add-link { display: block; text-align: center; margin-top: 8px; padding: 12px; background: #2b6cb0; color: #fff; text-decoration: none; border-radius: 10px; font-size: 16px; }
-  </style>
 </head>
-<body>
-  <div class="container">
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('支出グラフ')}"></header>
+  <main class="page-content">
     <h1>支出グラフ</h1>
-
-    <div class="card total-card">
-      <p style="margin: 0; font-size: 13px; color: #666;">合計支出金額（円）</p>
-      <p class="amount" th:text="${totalAmount}">0</p>
-      <p style="margin: 0; font-size: 13px; color: #666;">円</p>
-    </div>
-
-    <div class="tabs">
-      <button type="button" class="tab active" onclick="showDaily()">日別</button>
-      <button type="button" class="tab" onclick="showCategory()">カテゴリ別</button>
-    </div>
-
-    <div id="dailyPanel">
-      <div class="card">
-        <h2>日別支出推移</h2>
-        <canvas id="dailyChart"></canvas>
-      </div>
-    </div>
-
-    <div id="categoryPanel" style="display: none;">
-      <div class="card">
-        <h2>カテゴリ別支出</h2>
-        <canvas id="categoryChart"></canvas>
-      </div>
-    </div>
-
-    <div class="card">
-      <a class="add-link" th:href="@{/expenses/new}">レシートを追加</a>
-      <a class="back-link" th:href="@{/expenses}">支出一覧へ戻る</a>
-    </div>
-  </div>
-
-  <script th:inline="javascript">
-    const dailyLabels = [[${dailyLabels}]];
-    const dailyData = [[${dailyValues}]];
-    const categoryLabels = [[${categoryLabels}]];
-    const categoryData = [[${categoryValues}]];
-
-    function showDaily() {
-      document.getElementById('categoryPanel').style.display = 'none';
-      document.getElementById('dailyPanel').style.display = 'block';
-    }
-
-    function showCategory() {
-      document.getElementById('dailyPanel').style.display = 'none';
-      document.getElementById('categoryPanel').style.display = 'block';
-    }
-
-    showDaily();
-
-    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-    new Chart(dailyCtx, {
-      type: 'bar',
-      data: {
-        labels: dailyLabels,
-        datasets: [{
-          label: '支出金額（円）',
-          data: dailyData,
-          backgroundColor: 'rgba(43, 108, 176, 0.7)'
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-      type: 'pie',
-      data: {
-        labels: categoryLabels,
-        datasets: [{
-          label: '支出金額（円）',
-          data: categoryData,
-          backgroundColor: [
-            'rgba(230, 126, 34, 0.7)',
-            'rgba(46, 204, 113, 0.7)',
-            'rgba(52, 152, 219, 0.7)',
-            'rgba(155, 89, 182, 0.7)',
-            'rgba(241, 196, 15, 0.7)'
-          ]
-        }]
-      },
-      options: { responsive: true }
-    });
-  </script>
-</body>
-</html>
+    <section class="summary-card"><span>合計金額</span><strong><span th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')}">0</span> 円</strong></section>
+    <div class="chart-tabs"><button type="button" class="chart-tab is-selected" id="dailyTab">日別</button><button type="button" class="chart-tab" id="categoryTab">カテゴリ別</button></div>
+    <section class="chart-panel" id="dailyPanel"><h2>日別の支出</h2><canvas id="dailyChart" aria-label="日別支出グラフ"></canvas></section>
+    <section class="chart-panel" id="categoryPanel" hidden><h2>カテゴリ別の支出</h2><canvas id="categoryChart" aria-label="カテゴリ別支出グラフ"></canvas></section>
+    <a class="primary-action" th:href="@{/expenses/new}">＋ 支出を入力する</a>
+    <a class="secondary-action" th:href="@{/expenses}">支出一覧へ</a>
+  </main>
+  <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
+</div>
+<script th:inline="javascript">
+  const labelsByDay = [[${dailyLabels}]];
+  const totalsByDay = [[${dailyValues}]];
+  const labelsByCategory = [[${categoryLabels}]];
+  const totalsByCategory = [[${categoryValues}]];
+  const dailyPanel = document.getElementById('dailyPanel');
+  const categoryPanel = document.getElementById('categoryPanel');
+  const dailyTab = document.getElementById('dailyTab');
+  const categoryTab = document.getElementById('categoryTab');
+  dailyTab.addEventListener('click', () => {
+    dailyPanel.hidden = false; categoryPanel.hidden = true;
+    dailyTab.classList.add('is-selected'); categoryTab.classList.remove('is-selected');
+  });
+  categoryTab.addEventListener('click', () => {
+    dailyPanel.hidden = true; categoryPanel.hidden = false;
+    categoryTab.classList.add('is-selected'); dailyTab.classList.remove('is-selected');
+  });
+  new Chart(document.getElementById('dailyChart'), {
+    type: 'bar', data: { labels: labelsByDay, datasets: [{ label: '支出（円）', data: totalsByDay, backgroundColor: '#ff7900' }] },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'pie', data: { labels: labelsByCategory, datasets: [{ label: '支出（円）', data: totalsByCategory, backgroundColor: ['#ff7900', '#ffb36b', '#f39b75', '#f5cd73', '#e65b34'] }] },
+    options: { responsive: true }
+  });
+</script>
+</body></html>

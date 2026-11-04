@@ -9,11 +9,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @Configuration
+// メモ: 支出画面をログイン済みの利用者だけが開けるようにします。
 public class WebSecurityConfig implements WebMvcConfigurer {
+    // メモ: 画面ログインは自作コントローラーで行い、CSRF対策はSpring Securityに任せます。
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Existing login controller manages the session. Keep Spring Security's
         // CSRF protection and default security headers for every form.
         return http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
@@ -24,12 +27,15 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     }
 
     @Override
+    // メモ: 支出URLへ進む前にログイン状態を確認する処理を登録します。
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
+            // メモ: ログインしていなければログイン画面へ移動します。
             public boolean preHandle(HttpServletRequest request,
                     HttpServletResponse response, Object handler) throws Exception {
-                var session = request.getSession(false);
+                // メモ: 既存セッションだけを確認し、未ログイン時に空のセッションを作らないようにします。
+                HttpSession session = request.getSession(false);
                 if (session != null && Boolean.TRUE.equals(session.getAttribute("loggedIn"))
                         && session.getAttribute("expenseUserId") != null) {
                     return true;

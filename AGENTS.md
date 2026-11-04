@@ -3,7 +3,7 @@
 ## Project
 
 Tourism / 家計簿 (kakeibo) expense-tracking app for 沖縄みらいAI＆IT専門学校.
-Stack: Spring Boot 4.1.1 (Java 17) + Spring Data JPA + Thymeleaf + Oracle DB.
+Stack: Spring Boot 4.1.2 (Java 25) + Spring Data JPA + Thymeleaf + Oracle DB.
 UI text and domain terms are Japanese (categories: 食事 / 交通 / 宿泊 / 観光 / その他).
 
 ## Commands
@@ -15,7 +15,7 @@ The Maven module lives in `kakeibo/` — run all Maven commands from there, not 
 - Single test: `cd kakeibo && ./mvnw test -Dtest=KakeiboApplicationTests`
 - Package: `cd kakeibo && ./mvnw package`
 
-Maven wrapper included (mvnw / mvnw.cmd; wrapper 3.3.4 -> Maven 3.9.16). Java 17 required.
+Maven Wrapper included (mvnw / mvnw.cmd; wrapper 3.3.4 -> Maven 3.9.16). Java 25 required.
 
 ## Current state
 

@@ -9,7 +9,7 @@
 
 ### Eclipse / VS Code
 
-JDK 17 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」で `kakeibo/pom.xml` を選択します。
+JDK 25 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」で `kakeibo/pom.xml` を選択します。
 VS Code では `kakeibo` を開き、Java 拡張機能を使用します。
 起動クラスは `com.example.kakeibo.KakeiboApplication` です。
 
@@ -48,5 +48,4 @@ sh mvnw verify
 ```
 
 テストは専用のインメモリ H2 を使用します。ログイン・登録失敗、CSRF、ホームから家計簿への遷移、支出のユーザー分離、ログアウトを検証します。
-
 

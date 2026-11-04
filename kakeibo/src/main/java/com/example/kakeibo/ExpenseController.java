@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpSession;
@@ -29,24 +32,29 @@ import org.springframework.http.HttpStatus;
  */
 @Controller
 @RequestMapping("/expenses")
+// メモ: 支出画面の表示、登録、編集、集計を受け持ちます。
 public class ExpenseController {
 
+    // メモ: セッションからログイン中の利用者番号を読み取ります。
     private String userId(HttpSession session) {
         return (String) session.getAttribute("expenseUserId");
     }
 
     @InitBinder("expense")
+    // メモ: 画面から利用者番号や登録日時を書き換えられないようにします。
     public void bindExpense(WebDataBinder binder) {
         binder.setDisallowedFields("userId", "createdAt");
     }
 
     @ModelAttribute("expense")
+    // メモ: 入力画面用の空の支出を作り、利用者番号をセッションから設定します。
     public Expense expense(HttpSession session) {
         Expense expense = new Expense();
         expense.setUserId(userId(session));
         return expense;
     }
 
+    // メモ: 支出がログイン中の利用者のものか調べ、違えば404を返します。
     private Expense ownedExpense(Integer id, HttpSession session) {
         return repository.findByIdAndUserId(id, userId(session))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -55,21 +63,44 @@ public class ExpenseController {
     // 設計書：食事/交通/宿泊/観光/その他
     private static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
 
+    // メモ: 支出の検索・保存に使う部品です。
     private final ExpenseRepository repository;
 
+    // メモ: Spring から支出用リポジトリを受け取ります。
     public ExpenseController(ExpenseRepository repository) {
         this.repository = repository;
     }
 
     // 一覧
     @GetMapping
+    // メモ: ログイン中の利用者だけの支出一覧を表示します。
     public String list(Model model, HttpSession session) {
         model.addAttribute("expenses", repository.findByUserIdOrderByExpenseDateDesc(userId(session)));
         return "expenses/List";
     }
 
+    // メモ: レシート画像の撮影・選択画面を表示します。
+    @GetMapping("/capture")
+    public String capture() {
+        return "expenses/Capture";
+    }
+
+    // メモ: 画像を受け付けた後、支出内容の入力画面へ進みます。OCRはまだ行いません。
+    @PostMapping("/capture")
+    public String receiveReceipt(@RequestParam("receipt") MultipartFile receipt,
+                                 RedirectAttributes redirectAttributes) {
+        if (receipt.isEmpty() || receipt.getContentType() == null
+                || !receipt.getContentType().startsWith("image/")) {
+            redirectAttributes.addFlashAttribute("receiptError", "画像ファイルを選択してください。");
+            return "redirect:/expenses/capture";
+        }
+        redirectAttributes.addFlashAttribute("receiptMessage", "画像を受け付けました。内容を入力してください。");
+        return "redirect:/expenses/new";
+    }
+
     // 新規入力フォーム
     @GetMapping("/new")
+    // メモ: 今日の日付が入った新規支出フォームを表示します。
     public String form(Model model, HttpSession session) {
         Expense expense = new Expense();
         expense.setUserId(userId(session));
@@ -81,6 +112,7 @@ public class ExpenseController {
 
     // 編集フォーム
     @GetMapping("/{id}/edit")
+    // メモ: 所有者を確認してから既存の支出をフォームに表示します。
     public String edit(@PathVariable Integer id, Model model, HttpSession session) {
         Expense expense = ownedExpense(id, session);
         model.addAttribute("expense", expense);
@@ -90,6 +122,7 @@ public class ExpenseController {
 
     // 保存（id が空なら新規登録、id があれば更新）
     @PostMapping
+    // メモ: 入力を検査し、新規登録または所有者確認後の更新を行います。
     public String save(@Valid @ModelAttribute("expense") Expense expense,
                        BindingResult result, Model model, HttpSession session) {
         if (expense.getId() != null) {
@@ -105,13 +138,15 @@ public class ExpenseController {
 
     // 支出グラフ画面（日別・カテゴリ別の合計、合計金額・外貨換算を表示する）
     @GetMapping("/graph")
-    public String graph(Model model) {
-        List<Expense> expenses = repository.findByUserIdOrderByExpenseDateDesc(DEV_USER_ID);
+    // メモ: 利用者の支出を日別・カテゴリ別に合計し、グラフ画面へ渡します。
+    public String graph(Model model, HttpSession session) {
+        List<Expense> expenses = repository.findByUserIdOrderByExpenseDateDesc(userId(session));
 
         Map<LocalDate, BigDecimal> dailyTotals = new LinkedHashMap<>();
         Map<String, BigDecimal> categoryTotals = new LinkedHashMap<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
+        // メモ: 支出を1件ずつ読み、日別・カテゴリ別・全体の金額を足します。
         for (Expense expense : expenses) {
             BigDecimal amount = expense.getAmountJpy() == null ? BigDecimal.ZERO : expense.getAmountJpy();
             LocalDate expenseDate = expense.getExpenseDate();
@@ -146,10 +181,4 @@ public class ExpenseController {
         return "expenses/Graph";
     }
 
-    // 支出の削除（編集画面から削除できるようにする追加機能）
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Integer id) {
-        repository.deleteById(id);
-        return "redirect:/expenses";
-    }
 }
