@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>マイページ | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}"></head>
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('マイページ')}"></header>
+  <main class="page-content">
+    <section class="profile-card"><span class="avatar">☺</span><div><h1 th:text="${username}">たび子</h1><p th:text="${userEmail}">user@example.com</p></div><span class="profile-label">旅行を楽しむ会員</span></section>
+    <nav class="settings-list" aria-label="アカウント設定">
+      <a th:href="@{/expenses}"><span>▣</span><span>家計簿データ</span><b>›</b></a>
+      <a th:href="@{/currency}"><span>⇄</span><span>為替レート設定</span><b>›</b></a>
+      <a th:href="@{/language}"><span>◎</span><span>言語設定</span><b>›</b></a>
+      <a th:href="@{/logout/confirm}"><span>↪</span><span>ログアウト</span><b>›</b></a>
+    </nav>
+    <p class="sample-note">旅の思い出も、支出も、為替も。すべてこのアプリで。</p>
+  </main>
+  <nav th:replace="~{fragments/common :: nav('settings')}"></nav>
+</div></body></html>

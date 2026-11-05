@@ -1,90 +1,31 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支出の確認・編集</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #f4f6f8; color: #333; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Helvetica Neue", Arial, sans-serif; }
-    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 22px; margin: 8px 0 16px; }
-    form { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
-    input[type="text"], input[type="number"], input[type="date"], select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    .error { color: #c53030; font-size: 12px; margin-top: 4px; display: block; }
-    .actions { margin-top: 8px; }
-    button[type="submit"] {
-      width: 100%;
-      padding: 12px;
-      background: #2b6cb0;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-    }
-    .back-link { display: inline-block; margin-top: 12px; color: #2b6cb0; text-decoration: none; }
-    .delete-btn { width: 100%; padding: 12px; background: #c53030; color: #fff; border: none; border-radius: 10px; font-size: 16px; }
-  </style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>支出の確認・編集 | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
-  <nav><a th:href="@{/home}">ホームへ戻る</a> | <a th:href="@{/logout/confirm}">ログアウト</a></nav>
-  <h1>支出の確認・編集</h1>
-  <form th:action="@{/expenses}" th:object="${expense}" method="post">
-    <!-- 画面には出さないが、保存に必要な項目 -->
-    <input type="hidden" th:field="*{id}">
-
-
-      <div class="field">
-        支出日：
-        <input type="date" th:field="*{expenseDate}">
-        <span th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}" class="error"></span>
-      </div>
-
-      <div class="field">
-        品目名：
-        <input type="text" th:field="*{itemName}">
-        <span th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}" class="error"></span>
-      </div>
-
-      <div class="field">
-        金額（円）：
-        <input type="number" step="any" th:field="*{amountJpy}">
-        <span th:if="${#fields.hasErrors('amountJpy')}" th:errors="*{amountJpy}" class="error"></span>
-      </div>
-
-      <div class="field">
-        カテゴリ：
-        <select th:field="*{category}">
-          <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"></option>
-        </select>
-      </div>
-
-      <div class="field">
-        元通貨（外貨のとき）：
-        <input type="text" maxlength="3" th:field="*{originalCurrency}">
-      </div>
-
-      <div class="field">
-        元金額（外貨のとき）：
-        <input type="number" step="any" th:field="*{originalAmount}">
-      </div>
-
-      <div class="actions">
-        <button type="submit">保存</button>
-      </div>
-      <a class="back-link" th:href="@{/expenses}">一覧へ戻る</a>
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('支出の確認・編集')}"></header>
+  <main class="page-content">
+    <h1 th:text="${expense.id == null ? '支出を入力' : '支出を確認・編集'}">支出を入力</h1>
+    <p class="notice" th:if="${receiptMessage}" th:text="${receiptMessage}"></p>
+    <p class="notice">内容を入力して「保存」を押してください。保存後、支出グラフを表示します。</p>
+    <form class="form-panel" th:action="@{/expenses}" th:object="${expense}" method="post">
+      <input type="hidden" th:field="*{id}"><input type="hidden" th:field="*{userId}">
+      <label class="form-field">支出日<input type="date" th:field="*{expenseDate}" required><span class="field-error" th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}"></span></label>
+      <label class="form-field">品目名<input type="text" maxlength="50" th:field="*{itemName}" required><span class="field-error" th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}"></span></label>
+      <label class="form-field">金額（円）<input type="number" min="0.01" step="0.01" th:field="*{amountJpy}" required><span class="field-error" th:if="${#fields.hasErrors('amountJpy')}" th:errors="*{amountJpy}"></span></label>
+      <label class="form-field">カテゴリ<select th:field="*{category}" required><option value="" disabled>選択してください</option><option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option></select></label>
+      <details class="optional-fields"><summary>外貨情報（任意）</summary>
+        <label class="form-field">通貨コード<input type="text" maxlength="3" th:field="*{originalCurrency}"></label>
+        <label class="form-field">外貨の金額<input type="number" min="0" step="0.01" th:field="*{originalAmount}"></label>
+      </details>
+      <div class="form-actions"><button class="primary-action" type="submit">保存してグラフを見る</button><a class="secondary-action" th:href="@{/expenses}">一覧へ戻る</a></div>
     </form>
-
     <form th:if="${expense.id != null}" th:action="@{/expenses/{id}/delete(id=${expense.id})}" method="post">
       <button type="submit" class="delete-btn">削除</button>
     </form>
-</body>
+  </main>
+  <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
+</div></body>
 </html>

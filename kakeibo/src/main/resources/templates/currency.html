@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>為替レート | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}"></head>
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('為替レート')}"></header>
+  <main class="page-content">
+    <h1>リアルタイム為替レート</h1>
+    <p class="sample-note">表示中のレートは見本です。為替APIとの接続は準備中です。</p>
+    <section class="rate-list">
+      <article class="rate-row" th:each="rate : ${rates}"><span class="rate-flag" th:text="${rate.key == 'USD' ? '🇺🇸' : (rate.key == 'EUR' ? '🇪🇺' : (rate.key == 'KRW' ? '🇰🇷' : '🇹🇼'))}">💱</span><div><strong th:text="${rate.key}">USD</strong><small th:text="|1 ${rate.key} = ${rate.value} 円|">1 USD = 149.32 円</small></div><b>↗</b></article>
+    </section>
+    <section class="convert-panel">
+      <h2>外貨を円に換算する</h2>
+      <form th:action="@{/currency/convert}" method="post">
+        <label class="form-field">金額<input type="number" name="amount" min="0" step="0.01" th:value="${inputAmount != null ? inputAmount : 100}" required></label>
+        <label class="form-field">通貨<select name="currency"><option th:each="rate : ${rates}" th:value="${rate.key}" th:text="${rate.key}" th:selected="${selectedCurrency == rate.key}">USD</option></select></label>
+        <button class="primary-action" type="submit">日本円に換算する</button>
+      </form>
+      <p class="field-error" th:if="${error}" th:text="${error}"></p>
+      <p class="conversion-result" th:if="${convertedAmount != null}"><span th:text="|${inputAmount} ${selectedCurrency}|">100 USD</span><b>＝ <span th:text="${#numbers.formatDecimal(convertedAmount, 1, 'COMMA', 0, 'POINT')}">14,932</span> 円</b></p>
+    </section>
+    <a class="secondary-action" th:href="@{/expenses/capture}">家計簿に記録する</a>
+  </main>
+  <nav th:replace="~{fragments/common :: nav('currency')}"></nav>
+</div></body></html>

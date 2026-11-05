@@ -9,16 +9,21 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.kakeibo.repository.UserRepository;
 
 @Service
+// メモ: 利用者登録とログイン時の確認をまとめて行います。
 public class UserService {
 
+    // メモ: 利用者情報を保存・検索する部品です。
     private final UserRepository userRepository;
+    // メモ: パスワードを安全な照合用文字列に変換します。
     private final BCryptPasswordEncoder passwordEncoder =
             new BCryptPasswordEncoder();
 
+    // メモ: Spring から利用者用リポジトリを受け取ります。
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
+    // メモ: 入力を順番に検査し、問題がなければ利用者を保存します。
     @Transactional
     public String register(
             String username,
@@ -26,6 +31,7 @@ public class UserService {
             String password,
             String confirmPassword) {
 
+        // メモ: 名前、メールアドレス、パスワードの条件を一つずつ確認します。
         if (username == null
                 || username.trim().isEmpty()
                 || username.trim().length() > 15) {
@@ -59,6 +65,7 @@ public class UserService {
             return "このメールアドレスはすでに登録されています。";
         }
 
+        // メモ: 入力されたパスワードは元の文字のまま保存しません。
         String passwordHash = passwordEncoder.encode(password);
 
         userRepository.save(
@@ -70,15 +77,18 @@ public class UserService {
         return null;
     }
 
+    // メモ: メールアドレスから利用者番号を取得します。
     public Long userId(String email) {
         return userRepository.findByEmail(email).orElseThrow().getId();
     }
 
+    // メモ: メールアドレスとパスワードが登録内容と合うか確認します。
     public Optional<String> login(String email, String password) {
         if (email == null || password == null) {
             return Optional.empty();
         }
 
+        // メモ: 保存済みパスワードと入力を照合し、成功したときだけ名前を返します。
         Optional<String> storedHash =
                 userRepository.findPasswordHashByEmail(email.trim());
 

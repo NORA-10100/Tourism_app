@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>おすすめスポット | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}"></head>
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('おすすめスポット')}"></header>
+  <main class="page-content">
+    <a class="back-text" th:href="@{/home}">‹ ホーム</a>
+    <h1>沖縄のおすすめスポット</h1>
+    <div class="location-row"><strong>沖縄・那覇</strong><a th:href="@{/features/spots}">エリア変更</a></div>
+    <nav class="filter-chips" aria-label="カテゴリ"><a class="chip is-active" th:href="@{/features/spots}">おすすめ</a><a class="chip" th:href="@{/features/spots}">グルメ</a><a class="chip" th:href="@{/features/spots}">観光</a><a class="chip" th:href="@{/features/spots}">カフェ</a></nav>
+    <p class="sample-note">スポット情報の見本です。AI・地図との連携は準備中です。</p>
+    <article class="spot-card">
+      <div class="spot-photo spot-photo-cafe"><span>おすすめ</span><b>☼</b></div>
+      <div class="spot-card-body"><h2>国際通りの隠れ家カフェ</h2><p>地元の人にも人気の落ち着いたカフェ。沖縄らしいスイーツが楽しめます。</p><div class="spot-meta"><span>⌖ 徒歩5分</span><span>★ 4.8（124）</span></div><a class="text-action" th:href="@{/features/spots/1}">スポット詳細を見る　›</a></div>
+    </article>
+    <article class="spot-card">
+      <div class="spot-photo spot-photo-island"><span>海辺の景色</span><b>♡</b></div>
+      <div class="spot-card-body"><h2>瀬長島ウミカジテラス</h2><p>海を眺めながらショッピングやグルメが楽しめる人気スポットです。</p><div class="spot-meta"><span>⌖ 車で15分</span><span>★ 4.6（98）</span></div><a class="text-action" th:href="@{/features/spots/2}">スポット詳細を見る　›</a></div>
+    </article>
+  </main>
+  <nav th:replace="~{fragments/common :: nav('spots')}"></nav>
+</div></body></html>

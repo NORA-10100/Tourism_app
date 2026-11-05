@@ -1,4 +1,5 @@
-アプリ開発# ---
+# アプリ開発
+
 沖縄みらいAI＆IT専門学校が観光産業の課題解決に繋がるユーザアプリを制作するためのリポジトリ
 
 ## ホーム・ログイン・家計簿の統合アプリ
@@ -8,7 +9,7 @@
 
 ### Eclipse / VS Code
 
-JDK 17 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」で `kakeibo/pom.xml` を選択します。
+JDK 25 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」で `kakeibo/pom.xml` を選択します。
 VS Code では `kakeibo` を開き、Java 拡張機能を使用します。
 起動クラスは `com.example.kakeibo.KakeiboApplication` です。
 
@@ -25,8 +26,13 @@ SPRING_PROFILES_ACTIVE=cloud sh mvnw spring-boot:run
 ```
 
 ブラウザで `http://localhost:8080/` を開きます。起動画面 → 言語選択 → 新規登録 → ログイン → ホームと進めます。
-ホームの「レシート家計簿」は支出一覧へ移動します。スポット・多言語・リアルタイム・設定は元の仮画面です。
-言語選択は保存のみで、画面全体の翻訳は未実装です。
+ホームからは次の画面へ進めます。
+
+- レシート家計簿：レシート撮影画面（`/expenses/capture`）。画像のアップロードまでで、OCR による読み取りは未実装です。撮影後は支出入力へ進み、支出一覧・グラフも利用できます
+- スポット：スポット一覧・詳細（見本データ 2 件）
+- リアルタイム：為替レート・円換算画面（`/currency`）。レートは見本の固定値で、外部 API には未接続です
+- 言語選択：選択の保存のみで、画面全体の翻訳は未実装です
+- マイページ：共通の下部ナビから開けます（ログイン中の利用者情報を表示）
 
 ### DB とログイン
 
@@ -36,7 +42,24 @@ SPRING_PROFILES_ACTIVE=cloud sh mvnw spring-boot:run
 
 Oracle を使用する場合は `cloud` プロファイルを指定せず、既存の `db/create_tables.sql` を適用した DB を用意します。
 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` を安全な環境変数等で設定してください。
-ZIP 側の `app_users` テーブルは不要です。Oracle 接続はこの統合作業では未検証です。
+ZIP 側の `app_users` テーブルは不要です。このPCのOracle XEには `prod` プロファイルで接続し、スキーマの検証まで確認済みです。別サーバーの共有DBを使う場合は、そのDBのホスト名をURLに設定します。
+
+### チーム共有環境での起動
+
+チーム共有用の `prod` プロファイルはOracleへ接続し、スキーマを `validate` します。H2のテスト・開発データは使いません。
+アプリを起動するPCまたはサーバーに、共有Oracle DBの接続先とアカウントを環境変数として設定します。パスワードはソースやGitに書かないでください。
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "prod"
+$env:SPRING_DATASOURCE_URL = "jdbc:oracle:thin:@//<共有DBのホスト>:1521/XEPDB1"
+$env:SPRING_DATASOURCE_USERNAME = "vita_app_user"
+$env:SPRING_DATASOURCE_PASSWORD = "<共有DBのパスワード>"
+$env:MAVEN_USER_HOME = "$env:USERPROFILE\.m2"
+.\mvnw.cmd spring-boot:run
+```
+
+起動後はアプリを動かしているPCのIPアドレスを使い、同じネットワーク内から `http://<アプリPCのIP>:8080/` を開きます。PCとネットワークのファイアウォールで、TCP 8080への受信をLAN内に限って許可する必要があります。
+校外から利用する場合は、インターネットに公開できるサーバー、到達可能なOracle DB、HTTPSのURLが別途必要です。校内PCとローカルOracle XEのままでは校外から接続できません。
 
 ### テスト
 
@@ -47,3 +70,4 @@ sh mvnw verify
 ```
 
 テストは専用のインメモリ H2 を使用します。ログイン・登録失敗、CSRF、ホームから家計簿への遷移、支出のユーザー分離、ログアウトを検証します。
+

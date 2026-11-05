@@ -1,45 +1,83 @@
 # AGENTS.md
 
-## Project
+## プロジェクト概要
 
-Tourism / 家計簿 (kakeibo) expense-tracking app for 沖縄みらいAI＆IT専門学校.
-Stack: Spring Boot 4.1.1 (Java 17) + Spring Data JPA + Thymeleaf + Oracle DB.
-UI text and domain terms are Japanese (categories: 食事 / 交通 / 宿泊 / 観光 / その他).
+沖縄みらいAI＆IT専門学校（チーム Vita）の観光 / 家計簿 (kakeibo) アプリです。
+技術スタック: Spring Boot 4.1.2 (Java 25) + Spring Data JPA + Thymeleaf + Spring Security（CSRF とヘッダーのみ）。
+DB: デフォルトの `local` プロファイルでは Oracle XE、`cloud` プロファイルとテストでは H2、
+チーム共有用の `prod` プロファイルでは環境変数で指定した Oracle を使います。
+UI のテキストとドメイン用語は日本語です（カテゴリ: 食事 / 交通 / 宿泊 / 観光 / その他）。
 
-## Commands
+## コマンド
 
-The Maven module lives in `kakeibo/` — run all Maven commands from there, not the repo root.
+Maven モジュールは `kakeibo/` にあります。Maven コマンドはリポジトリのルートではなく、すべてここで実行してください。
 
-- Run app: `cd kakeibo && ./mvnw spring-boot:run`
-- Run tests: `cd kakeibo && ./mvnw test`
-- Single test: `cd kakeibo && ./mvnw test -Dtest=KakeiboApplicationTests`
-- Package: `cd kakeibo && ./mvnw package`
+- アプリ起動（H2、Oracle 不要）: `cd kakeibo && SPRING_PROFILES_ACTIVE=cloud ./mvnw spring-boot:run`
+- アプリ起動（Oracle）: `cd kakeibo && ./mvnw spring-boot:run`
+- アプリ起動（チーム共有、`prod` プロファイル）: 接続情報を環境変数で設定して起動します。手順は README の「チーム共有環境での起動」を参照してください
+- テスト実行: `cd kakeibo && ./mvnw test`
+- テストを 1 つだけ実行: `cd kakeibo && ./mvnw test -Dtest=KakeiboApplicationTests`
+- パッケージ作成: `cd kakeibo && ./mvnw package`
 
-Maven wrapper included (mvnw / mvnw.cmd; wrapper 3.3.4 -> Maven 3.9.16). Java 17 required.
+Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java 25 が必要です。
 
-## Current state
+## ワークフロー（Git / PR）
 
-- Single-module Spring Boot app, package `com.example.kakeibo`, entry class `KakeiboApplication`.
-- Feature in progress: 支出 (expense) tracker — `Expense` entity, `ExpenseRepository`, `ExpenseController`
-  (`@RequestMapping("/expenses")`), Thymeleaf views in `src/main/resources/templates/expenses/{List,Form}.html`.
-- No REST controllers yet; no delete endpoint (design doc allows SELECT/INSERT/UPDATE only).
+- コミットメッセージは日本語で、何を変更したかが分かるように書きます（メッセージがそのまま PR の概要になります）。
+- `main` へ直接コミット・プッシュしないでください。ブランチを `main` へマージするのも禁止です。
+  マージの判断はすべてリポジトリの所有者が GitHub 上で行います。
+- 作業は `feature/*` ブランチで行い、コミットしてそのブランチをプッシュしたら、そこで止めてください。
+  PR が必要な場合はタイトルと本文を日本語で下書きし、作成・レビュー・マージは所有者に任せます。
+- この環境には `gh` CLI が入っていないため、`gh pr create` は使えません。
 
-## Gotchas
+## 現在の状態
 
-- `Hello.java` at repo root is a scratch program, not part of the Maven build.
-- `kakeibo/bin/` is committed Eclipse build output (stale copies of pom/mvnw/sources); do not edit it.
-- DB: local Oracle XE at `//localhost:1521/XEPDB1`, user `vita_app_user`. Password is only in
-  `kakeibo/src/main/resources/application-local.properties`, which is gitignored — never commit it.
-- `spring.jpa.hibernate.ddl-auto=validate` in `application.properties`. Per the comment there, switch to
-  `update` on your own PC when entity changes require table creation; use `validate` for a shared DB.
-- SQL scripts live in `db/` (Oracle-flavored): `create_tables.sql`, `insert_data.sql`, `insert_expenses.sql`,
-  `queries_expenses.sql`. Demo device/user id used: `demo-device-001`.
-- Design decisions encoded in the entity that differ from plain JPA defaults: entity `id` is `Integer`
-  (design doc says INTEGER — `Long` fails `ddl-auto=validate`); `originalCurrency` defaults to `"JPY"`;
-  `createdAt` is DB-managed (`insertable = false, updatable = false`).
+- 単一モジュールの Spring Boot アプリです。パッケージは `com.example.kakeibo`、起動クラスは `KakeiboApplication` です。
+- 認証: `controller/AuthController` によるセッション方式の独自ログイン（スプラッシュ / 言語選択 / 新規登録 /
+  ログイン / ログアウト / ホーム）で、実処理は `service/UserService` + `repository/UserRepository`
+  （`users` テーブル、パスワードは BCrypt ハッシュ）を使います。ログイン時にセッションへ `loggedIn`、
+  `expenseUserId = "user-<users.id>"`、`username`、`userEmail` を保存します。
+  Spring Security のフォームログインは無効化していて、CSRF 保護とセキュリティヘッダーだけを提供します。
+  `WebSecurityConfig` のインターセプタが `/expenses/**` をログイン済み利用者だけに制限します。
+- 支出（家計簿）: `Expense` エンティティ、`ExpenseRepository`、`ExpenseController`
+  （`@RequestMapping("/expenses")`）。このコントローラーだけは `controller/` ではなくルートパッケージにある点に注意してください。
+  画面は `src/main/resources/templates/expenses/{List,Form,Graph,Capture}.html` です。
+  Capture はレシート画像のアップロードを受け付けて入力画面へ進めます。OCR はまだありません。
+  REST コントローラーはまだなく、削除エンドポイントもありません（設計書の権限は SELECT/INSERT/UPDATE のみ）。
+  他人の支出を開くと 404 になります。
+- 旅行機能: `controller/FeatureController` がスポット一覧・詳細
+  （`/features/spots`、`/features/spots/{id}`。現在はハードコードされた見本 2 件）、マイページ
+  （`/mypage`）、ホームの機能カードのリダイレクト（receipts -> `/expenses/capture`、
+  realtime -> `/currency`、languages/settings -> `/mypage`）を担当します。
+- 為替: `controller/CurrencyController`（`/currency`、`/currency/convert`）が
+  USD/EUR/KRW/TWD を固定の見本レートで円換算します。外部 API にはまだ接続していません。
+- 共通レイアウト: `templates/fragments/common.html` + `static/css/app.css`。
+  言語選択は選択をセッションに保存するだけで、画面全体の翻訳は未実装です。
 
-## Testing
+## 注意事項
 
-- Only `KakeiboApplicationTests.contextLoads` exists (`@SpringBootTest`).
-- Context load runs Hibernate validation against the DB, so the local Oracle XE instance must be running;
-  no H2 or testcontainers configured.
+- `Hello.java`（リポジトリ直下）と `kakeibo/bin/`（Eclipse のビルド出力）は fd0922f で削除済みです。
+  ビルド出力をリポジトリへ再追加しないでください。
+- DB: ローカルの Oracle XE は `//localhost:1521/XEPDB1`、ユーザーは `vita_app_user` です。パスワードは
+  `application-local.properties` にだけ書き、Git 管理外にしてください。絶対にコミットしないでください。
+- `spring.jpa.hibernate.ddl-auto` はプロファイルごとに異なります。`application.properties` では `validate`
+  （そこのコメントのとおり、エンティティ変更でテーブル作成が必要なときは自分の PC では `update` に切り替え、
+  共有 DB では `validate` を使う）、`application-cloud.properties` では `update`、
+  `application-prod.properties` では `validate`、テストでは `create-drop` です。
+- SQL スクリプトは `db/` にあります（Oracle 方言）: `create_tables.sql`、`insert_data.sql`、`insert_expenses.sql`、
+  `queries_expenses.sql`。支出は `user-<users.id>` で識別します。旧 `dev-device-001` /
+  `demo-device-001` のデータは自動移行されません。
+- エンティティに反映された設計判断のうち、素の JPA デフォルトと異なる点: `id` は `Integer`
+  （設計書が INTEGER。`Long` にすると `ddl-auto=validate` で失敗する）、`originalCurrency` のデフォルトは `"JPY"`、
+  `createdAt` は DB 管理（`insertable = false, updatable = false`）です。
+
+## テスト
+
+- テストクラスは `kakeibo/src/test/java/com/example/kakeibo/` に 2 本あります。
+  `KakeiboApplicationTests.contextLoads`（`@SpringBootTest`）と
+  `LoginExpenseIntegrationTests`（MockMvc による通し確認: 新規登録、ログイン失敗、CSRF、
+  ホームからの画面遷移、レシート画像アップロード、為替換算、スポット / マイページ表示、
+  支出のユーザー分離、削除不可、ログアウト）です。
+- テストは専用のインメモリ H2 で実行されます（`src/test/resources/application.properties`、
+  `ddl-auto=create-drop`）。実行に Oracle は不要です。
+- すべて実行する場合: `cd kakeibo && ./mvnw verify`
