@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "aws.region",
+      "type": "java.lang.String",
+      "description": "Amazon Textractのリージョン",
+      "defaultValue": "ap-northeast-1"
+    }
+  ]
+}

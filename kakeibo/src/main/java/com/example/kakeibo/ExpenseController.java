@@ -61,7 +61,7 @@ public class ExpenseController {
     }
 
     // 設計書：食事/交通/宿泊/観光/その他
-    private static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
+    public static final List<String> CATEGORIES = List.of("食事", "交通", "宿泊", "観光", "その他");
 
     // メモ: 支出の検索・保存に使う部品です。
     private final ExpenseRepository repository;
@@ -184,4 +184,10 @@ public class ExpenseController {
         return "expenses/Graph";
     }
 
+    // 支出の削除（編集画面から削除できるようにする追加機能）
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Integer id, HttpSession session) {
+        repository.delete(ownedExpense(id, session));
+        return "redirect:/expenses";
+    }
 }
