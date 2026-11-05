@@ -37,7 +37,24 @@ SPRING_PROFILES_ACTIVE=cloud sh mvnw spring-boot:run
 
 Oracle を使用する場合は `cloud` プロファイルを指定せず、既存の `db/create_tables.sql` を適用した DB を用意します。
 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` を安全な環境変数等で設定してください。
-ZIP 側の `app_users` テーブルは不要です。Oracle 接続はこの統合作業では未検証です。
+ZIP 側の `app_users` テーブルは不要です。このPCのOracle XEには `prod` プロファイルで接続し、スキーマの検証まで確認済みです。別サーバーの共有DBを使う場合は、そのDBのホスト名をURLに設定します。
+
+### チーム共有環境での起動
+
+チーム共有用の `prod` プロファイルはOracleへ接続し、スキーマを `validate` します。H2のテスト・開発データは使いません。
+アプリを起動するPCまたはサーバーに、共有Oracle DBの接続先とアカウントを環境変数として設定します。パスワードはソースやGitに書かないでください。
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "prod"
+$env:SPRING_DATASOURCE_URL = "jdbc:oracle:thin:@//<共有DBのホスト>:1521/XEPDB1"
+$env:SPRING_DATASOURCE_USERNAME = "vita_app_user"
+$env:SPRING_DATASOURCE_PASSWORD = "<共有DBのパスワード>"
+$env:MAVEN_USER_HOME = "$env:USERPROFILE\.m2"
+.\mvnw.cmd spring-boot:run
+```
+
+起動後はアプリを動かしているPCのIPアドレスを使い、同じネットワーク内から `http://<アプリPCのIP>:8080/` を開きます。PCとネットワークのファイアウォールで、TCP 8080への受信をLAN内に限って許可する必要があります。
+校外から利用する場合は、インターネットに公開できるサーバー、到達可能なOracle DB、HTTPSのURLが別途必要です。校内PCとローカルOracle XEのままでは校外から接続できません。
 
 ### テスト
 
