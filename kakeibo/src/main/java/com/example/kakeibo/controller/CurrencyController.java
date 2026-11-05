@@ -8,11 +8,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
 
 @Controller
+@RequestMapping("/currency")
 // メモ: 為替レートの表示と簡単な円換算画面を受け持ちます。
 public class CurrencyController {
 
@@ -24,7 +26,7 @@ public class CurrencyController {
             "TWD", new BigDecimal("4.62"));
 
     // メモ: ログイン中だけ為替画面を表示します。
-    @GetMapping("/currency")
+    @GetMapping
     public String currency(HttpSession session, Model model) {
         if (!Boolean.TRUE.equals(session.getAttribute("loggedIn"))) {
             return "redirect:/login";
@@ -34,7 +36,7 @@ public class CurrencyController {
     }
 
     // メモ: 入力金額に選択したレートを掛けて、日本円に換算します。
-    @PostMapping("/currency/convert")
+    @PostMapping("/convert")
     public String convert(@RequestParam BigDecimal amount,
                           @RequestParam String currency,
                           HttpSession session,

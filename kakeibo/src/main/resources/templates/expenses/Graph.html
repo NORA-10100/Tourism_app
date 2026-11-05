@@ -19,10 +19,10 @@
   <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
 </div>
 <script th:inline="javascript">
-  const labelsByDay = [[${dailyLabels}]];
-  const totalsByDay = [[${dailyValues}]];
-  const labelsByCategory = [[${categoryLabels}]];
-  const totalsByCategory = [[${categoryValues}]];
+  const labelsByDay = /*[[${dailyLabels}]]*/ [];
+  const totalsByDay = /*[[${dailyValues}]]*/ [];
+  const labelsByCategory = /*[[${categoryLabels}]]*/ [];
+  const totalsByCategory = /*[[${categoryValues}]]*/ [];
   const dailyPanel = document.getElementById('dailyPanel');
   const categoryPanel = document.getElementById('categoryPanel');
   const dailyTab = document.getElementById('dailyTab');

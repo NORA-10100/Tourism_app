@@ -18,11 +18,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // メモ: ログイン時に照合するパスワード情報を取得します。
     default Optional<String> findPasswordHashByEmail(String email) {
-        return findByEmail(email).map(User::getPasswordHash);
+        return findByEmail(email).map(user -> user.getPasswordHash());
     }
 
     // メモ: ログイン後に表示する利用者名を取得します。
     default Optional<String> findUsernameByEmail(String email) {
-        return findByEmail(email).map(User::getUsername);
+        return findByEmail(email).map(user -> user.getUsername());
     }
 }

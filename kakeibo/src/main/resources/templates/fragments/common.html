@@ -2,16 +2,16 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <body>
 <header class="app-header" th:fragment="header(title)">
-  <a class="header-home" th:href="@{/home}" aria-label="ホームへ">Vita <span>沖縄の旅をもっと楽しく</span></a>
+  <a class="header-home" th:href="@{/home}" aria-label="ホームへ">Vita <span>旅をもっと楽しく、もっとスマートに。</span></a>
   <span class="header-title" th:text="${title}">画面名</span>
   <a class="profile-link" th:href="@{/mypage}" aria-label="マイページ">●</a>
 </header>
-<nav class="bottom-nav" th:fragment="nav(active)">
-  <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span>⌂</span>ホーム</a>
-  <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/features/spots}"><span>⌖</span>スポット</a>
-  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/expenses/capture}"><span>▣</span>家計簿</a>
-  <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span>⇄</span>為替</a>
-  <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span>♙</span>マイページ</a>
+<nav class="bottom-nav" th:fragment="nav(active)" aria-label="メインメニュー">
+  <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span aria-hidden="true">⌂</span>ホーム</a>
+  <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/features/spots}"><span aria-hidden="true">♧</span>スポット</a>
+  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/expenses/capture}"><span aria-hidden="true">▣</span>家計簿</a>
+  <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span aria-hidden="true">⇄</span>為替</a>
+  <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span aria-hidden="true">♙</span>マイページ</a>
 </nav>
 </body>
 </html>
