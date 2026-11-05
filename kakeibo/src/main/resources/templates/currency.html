@@ -19,7 +19,7 @@
       <p class="field-error" th:if="${error}" th:text="${error}"></p>
       <p class="conversion-result" th:if="${convertedAmount != null}"><span th:text="|${inputAmount} ${selectedCurrency}|">100 USD</span><b>＝ <span th:text="${#numbers.formatDecimal(convertedAmount, 1, 'COMMA', 0, 'POINT')}">14,932</span> 円</b></p>
     </section>
-    <a class="secondary-action" th:href="@{/expenses/capture}">家計簿に記録する</a>
+    <a class="secondary-action" th:href="@{/receipts/scan}">家計簿に記録する</a>
   </main>
   <nav th:replace="~{fragments/common :: nav('currency')}"></nav>
 </div></body></html>

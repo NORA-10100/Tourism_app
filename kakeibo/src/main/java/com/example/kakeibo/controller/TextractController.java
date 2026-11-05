@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.kakeibo.service.TextractService;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/textract")
@@ -28,7 +29,12 @@ public class TextractController {
 
     @PostMapping(value = "/read", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> readText(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            HttpSession session) {
+        if (!Boolean.TRUE.equals(session.getAttribute("loggedIn"))
+                || session.getAttribute("expenseUserId") == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "ログインしてください");
+        }
         try {
             if (file.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

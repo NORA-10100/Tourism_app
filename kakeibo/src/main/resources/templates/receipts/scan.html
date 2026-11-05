@@ -20,6 +20,7 @@
     </header>
 
     <div class="error" th:if="${error}" th:text="${error}"></div>
+    <div class="error" th:if="${receiptError}" th:text="${receiptError}"></div>
     <div class="message" th:if="${message}" th:text="${message}"></div>
 
     <section class="scan-card">
@@ -27,7 +28,7 @@
         <label class="dropzone" id="dropzone" for="file">
           <input id="file" name="file" type="file" accept="image/*" capture="environment" hidden>
           <span class="dropzone-icon" aria-hidden="true">📷</span>
-          <span class="dropzone-title">レシートを撮影 / 画像を選択</span>
+          <span class="dropzone-title">レシートを撮影する / 画像を選択</span>
           <span class="dropzone-hint">JPEG・PNG（10MBまで）</span>
           <img id="preview" class="preview" alt="選択したレシート画像" hidden>
         </label>

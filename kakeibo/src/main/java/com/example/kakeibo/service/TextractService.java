@@ -31,15 +31,7 @@ public class TextractService {
                 .document(document)
                 .build();
 
-        DetectDocumentTextResponse response;
-        try {
-            response = textractClient.detectDocumentText(request);
-        } catch (Exception e) {
-            System.out.println("===== Textract接続エラー =====");
-            e.printStackTrace();
-            System.out.println("=============================");
-            throw e;
-        }
+        DetectDocumentTextResponse response = textractClient.detectDocumentText(request);
 
         List<String> result = new ArrayList<>();
         for (Block block : response.blocks()) {

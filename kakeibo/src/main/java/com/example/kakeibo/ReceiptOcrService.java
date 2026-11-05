@@ -3,7 +3,7 @@ package com.example.kakeibo;
 import com.example.kakeibo.service.TextractService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.time.DateTimeException;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -47,14 +47,6 @@ public class ReceiptOcrService {
                 throw new ReceiptOcrException(
                         "レシートの文字を読み取れませんでした。");
             }
-            System.out.println("===== OCR読み取り結果 =====");
-
-            for (int i = 0; i < lines.size(); i++) {
-                System.out.println(i + " : " + lines.get(i));
-            }
-
-            System.out.println("==========================");
-
             String itemName = findItemName(lines);
             BigDecimal amount = findAmount(lines);
 
@@ -72,9 +64,9 @@ public class ReceiptOcrService {
         } catch (ReceiptOcrException e) {
             throw e;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             throw new ReceiptOcrException(
-                    "Amazon Textractでの読み取りに失敗しました。", e);
+                    "AWS Textractに接続できません。AWS認証情報（AWS_PROFILEなど）、リージョン、ネットワークを確認してください。",
+                    e);
         }
     }
 
@@ -243,7 +235,7 @@ public class ReceiptOcrService {
                             Integer.parseInt(matcher.group(1)),
                             Integer.parseInt(matcher.group(2)),
                             Integer.parseInt(matcher.group(3)));
-                } catch (DateTimeParseException
+                } catch (DateTimeException
                         | NumberFormatException e) {
                     // 不正な日付は無視する
                 }
