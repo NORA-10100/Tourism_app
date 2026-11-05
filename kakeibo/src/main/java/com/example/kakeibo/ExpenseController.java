@@ -151,9 +151,12 @@ public class ExpenseController {
             BigDecimal amount = expense.getAmountJpy() == null ? BigDecimal.ZERO : expense.getAmountJpy();
             LocalDate expenseDate = expense.getExpenseDate();
             if (expenseDate != null) {
-                dailyTotals.merge(expenseDate, amount, BigDecimal::add);
+                BigDecimal dailyTotal = dailyTotals.get(expenseDate);
+                dailyTotals.put(expenseDate, (dailyTotal == null ? BigDecimal.ZERO : dailyTotal).add(amount));
             }
-            categoryTotals.merge(expense.getCategory(), amount, BigDecimal::add);
+            String category = expense.getCategory();
+            BigDecimal categoryTotal = categoryTotals.get(category);
+            categoryTotals.put(category, (categoryTotal == null ? BigDecimal.ZERO : categoryTotal).add(amount));
             totalAmount = totalAmount.add(amount);
         }
 
