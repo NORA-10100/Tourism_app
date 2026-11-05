@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ホーム | Vita</title>
-  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>ホーム | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body><div class="app-shell">
   <header th:replace="~{fragments/common :: header('ホーム')}"></header>
-  <main class="page-content">
-    <p class="greeting"><span th:text="${username}">ユーザー</span> さん、こんにちは</p>
-    <a class="home-search" th:href="@{/features/spots}"><span aria-hidden="true">⌕</span> 行き先・スポットを検索</a>
+  <main class="page-content home-page">
+    <div class="home-welcome"><span class="avatar" aria-hidden="true">☀</span><p class="greeting"><strong th:text="${username}">たび子</strong>さん、こんにちは</p><a class="bell-link" th:href="@{/mypage}" aria-label="お知らせ">♧</a></div>
+    <a class="home-search" th:href="@{/features/spots}"><span aria-hidden="true">⌕</span>場所・スポットを検索</a>
     <section class="home-hero">
-      <div><small>沖縄の旅を、もっとあなたらしく。</small><h1>まだ知らない沖縄に<br>出会いに行こう。</h1><a class="hero-action" th:href="@{/features/spots}">おすすめを見る</a></div>
-      <span class="hero-sun" aria-hidden="true">☀</span>
+      <div><small>人気のエリアに出かけよう</small><h1>ローカルスポット</h1><a class="hero-action" th:href="@{/features/spots}">おすすめを見る</a></div>
+      <span class="hero-sun" aria-hidden="true">✦</span>
     </section>
     <h2 class="section-title">旅をサポートする機能</h2>
     <section class="feature-grid" aria-label="機能一覧">
-      <a class="feature-card" th:href="@{/features/spots}"><span>⌖</span><strong>AIスポット提案</strong><small>地元のおすすめを探す</small></a>
-      <a class="feature-card" th:href="@{/expenses/capture}"><span>▣</span><strong>家計簿</strong><small>旅の支出を記録する</small></a>
-      <a class="feature-card" th:href="@{/currency}"><span>⇄</span><strong>リアルタイム為替</strong><small>外貨を日本円に換算</small></a>
-      <a class="feature-card" th:href="@{/language}"><span>◎</span><strong>多言語選択</strong><small>表示言語を選ぶ</small></a>
+      <a class="feature-card" th:href="@{/features/spots}"><span aria-hidden="true">♧</span><strong>おすすめスポット</strong></a>
+      <a class="feature-card" th:href="@{/expenses/capture}"><span aria-hidden="true">▣</span><strong>家計簿</strong></a>
+      <a class="feature-card" th:href="@{/currency}"><span aria-hidden="true">⇄</span><strong>為替レート</strong></a>
+      <a class="feature-card" th:href="@{/language}"><span aria-hidden="true">文</span><strong>言語設定</strong></a>
     </section>
-    <p class="notice">旅の思い出も、支出も、為替も。すべてこのアプリで。</p>
+    <p class="notice">スポットや為替の情報はデモ表示です。旅の支出を記録して確認できます。</p>
   </main>
   <nav class="bottom-nav" th:replace="~{fragments/common :: nav('home')}"></nav>
 </div></body>
