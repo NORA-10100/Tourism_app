@@ -9,6 +9,7 @@
   <main class="page-content">
     <h1 th:text="${expense.id == null ? '支出を入力' : '支出を確認・編集'}">支出を入力</h1>
     <p class="notice" th:if="${receiptMessage}" th:text="${receiptMessage}"></p>
+    <p class="auth-message error" th:if="${receiptError}" th:text="${receiptError}"></p>
     <p class="notice">内容を入力して「保存」を押してください。保存後、支出グラフを表示します。</p>
     <form class="form-panel" th:action="@{/expenses}" th:object="${expense}" method="post">
       <input type="hidden" th:field="*{id}"><input type="hidden" th:field="*{userId}">

@@ -13,7 +13,7 @@
       <p class="file-name" id="fileName">画像が選択されていません</p>
       <button class="primary-action" type="submit">画像を確認して次へ</button>
     </form>
-    <p class="notice">※ 現在は画像を受け付けた後、支出内容を手入力します。OCR読み取りは準備中です。</p>
+    <p class="notice">画像を送信すると、レシートの品目名・金額・支出日を読み取り、確認画面へ反映します。</p>
     <a class="secondary-action" th:href="@{/expenses}">支出一覧を見る</a>
   </main>
   <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
