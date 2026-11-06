@@ -290,11 +290,22 @@ public class ReceiptOcrService {
 
         public ReceiptOcrException(String message, Throwable cause) {
             super(message, cause);
-            this.detail = null;
+            this.detail = describeCause(cause);
         }
 
         public String getDetail() {
             return detail;
+        }
+
+        private static String describeCause(Throwable cause) {
+            if (cause == null) {
+                return null;
+            }
+
+            // AWSのエラー種別と説明を画面に出し、権限・認証・通信のどこで失敗したか分かるようにします。
+            String message = cause.getMessage();
+            return cause.getClass().getSimpleName()
+                    + (message == null || message.isBlank() ? "" : ": " + message);
         }
     }
 }

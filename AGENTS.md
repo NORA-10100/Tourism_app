@@ -63,7 +63,7 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
   `application-local.properties` にだけ書き、Git 管理外にしてください。絶対にコミットしないでください。
 - `spring.jpa.hibernate.ddl-auto` は `application.properties` と `application-prod.properties` で `validate`、
   テストでは `create-drop` です。ローカルでテーブル変更が必要な場合の手順は README を確認します。
-- レシート OCR は AWS Textract を呼び出すため、AWS 認証情報と `textract:DetectDocumentText` 権限が必要です。
+- レシート OCR は AWS Textract の `AnalyzeDocument` API を呼び出すため、AWS 認証情報と `textract:AnalyzeDocument` 権限が必要です。
   AWS 認証情報をソースやGitに保存しないでください。
 - SQL スクリプトは `db/` にあります（Oracle 方言）: `create_tables.sql`、`insert_data.sql`、`insert_expenses.sql`、
   `queries_expenses.sql`。支出は `user-<users.id>` で識別します。旧 `dev-device-001` /
