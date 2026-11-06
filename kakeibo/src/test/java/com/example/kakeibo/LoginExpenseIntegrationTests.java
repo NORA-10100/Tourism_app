@@ -80,6 +80,10 @@ class LoginExpenseIntegrationTests {
                 .andExpect(content().string(containsString("家計簿")));
         mvc.perform(get("/expenses/capture").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("レシートを撮影する")));
+        mvc.perform(get("/receipts/scan").session(alice)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("camera-btn")))
+                .andExpect(content().string(containsString("gallery-btn")))
+                .andExpect(content().string(containsString("手入力で登録")));
         mvc.perform(multipart("/expenses/capture").file(new MockMultipartFile(
                 "receipt", "receipt.jpg", "image/jpeg", new byte[] { 1, 2, 3 }))
                 .session(alice).with(csrf()))

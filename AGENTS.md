@@ -43,7 +43,9 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
   画面は `src/main/resources/templates/expenses/{List,Form,Graph,Capture}.html` です。
   レシート OCR は `ReceiptController` / `ReceiptOcrService` / `TextractService` が担当し、
   Amazon Textract の認証情報が必要です。読み取り結果を確認・修正してから支出登録します。
-  OCR API は `/api/receipts/scan`、画面は `/receipts/scan` です。
+  OCR API は `/api/receipts/scan`、画面は `/receipts/scan` です。画面はカメラ撮影と画像選択の
+  両方に対応し、送信前に長辺 2400px 以下へ縮小して JPEG 化します（上限 20MB、HEIC は非対応）。
+  合計金額は「合計」「計」に加えて、OCR で「合」が欠けた「言十」も合計として扱います。
   削除エンドポイントはありません（設計書の権限は SELECT/INSERT/UPDATE のみ）。
   他人の支出を開くと 404 になります。
 - 旅行機能: `controller/FeatureController` がスポット一覧・詳細
@@ -65,6 +67,9 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
   テストでは `create-drop` です。ローカルでテーブル変更が必要な場合の手順は README を確認します。
 - レシート OCR は AWS Textract の `AnalyzeDocument` API を呼び出すため、AWS 認証情報と `textract:AnalyzeDocument` 権限が必要です。
   AWS 認証情報をソースやGitに保存しないでください。
+- スマートフォンや VS Code のポート転送経由で開いても `http://127.0.0.1:8080/...` へリダイレクトしないよう、
+  `application.properties` で `server.tomcat.use-relative-redirects=true` と
+  `server.forward-headers-strategy=framework` を設定しています。変更後はアプリの再起動が必要です。
 - SQL スクリプトは `db/` にあります（Oracle 方言）: `create_tables.sql`、`insert_data.sql`、`insert_expenses.sql`、
   `queries_expenses.sql`。支出は `user-<users.id>` で識別します。旧 `dev-device-001` /
   `demo-device-001` のデータは自動移行されません。
@@ -74,11 +79,12 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
 
 ## テスト
 
-- テストクラスは `kakeibo/src/test/java/com/example/kakeibo/` に 2 本あります。
-  `KakeiboApplicationTests.contextLoads`（`@SpringBootTest`）と
+- テストクラスは `kakeibo/src/test/java/com/example/kakeibo/` に 3 本あります。
+  `KakeiboApplicationTests.contextLoads`（`@SpringBootTest`）、
   `LoginExpenseIntegrationTests`（MockMvc による通し確認: 新規登録、ログイン失敗、CSRF、
   ホームからの画面遷移、レシート画像アップロード、為替換算、スポット / マイページ表示、
-  支出のユーザー分離、削除不可、ログアウト）です。
+  支出のユーザー分離、削除不可、ログアウト）、
+  `ReceiptOcrServiceTests`（レシート OCR の合計金額・日付・品目・カテゴリ解析）です。
 - テストは専用のインメモリ H2 で実行されます（`src/test/resources/application.properties`、
   `ddl-auto=create-drop`）。実行に Oracle は不要です。
 - すべて実行する場合: `cd kakeibo && ./mvnw verify`

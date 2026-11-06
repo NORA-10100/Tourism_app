@@ -25,19 +25,25 @@
 
     <section class="scan-card">
       <form id="scan-form">
+        <div class="scan-actions">
+          <button id="camera-btn" class="btn btn-primary" type="button">カメラで撮影</button>
+          <button id="gallery-btn" class="btn btn-ghost" type="button">画像を選択</button>
+        </div>
+        <input id="file" name="file" type="file" accept="image/*" hidden>
+        <input id="camera-file" type="file" accept="image/*" capture="environment" hidden>
         <label class="dropzone" id="dropzone" for="file">
-          <input id="file" name="file" type="file" accept="image/jpeg,image/png" capture="environment" hidden>
           <span class="dropzone-icon" aria-hidden="true">📷</span>
-          <span class="dropzone-title">レシートを撮影する / 画像を選択</span>
-          <span class="dropzone-hint">JPEG・PNG（10MBまで）</span>
+          <span class="dropzone-title">ここに画像をドロップ / タップして選択</span>
+          <span class="dropzone-hint">JPEG・PNG（20MBまで。送信前に自動で縮小します）</span>
           <img id="preview" class="preview" alt="選択したレシート画像" hidden>
         </label>
         <button id="scan-btn" class="btn btn-primary" type="submit" disabled>読み取る</button>
+        <p class="hint manual-link">読み取れない場合は <a th:href="@{/expenses/new}">手入力で登録</a> できます。</p>
       </form>
 
       <div id="loading" class="loading" hidden>
         <span class="spinner" aria-hidden="true"></span>
-        <p>レシートを読み取っています…</p>
+        <p id="loading-text">レシートを読み取っています…</p>
         <p class="hint">金額・品目・日付を抽出中（数秒かかります）</p>
       </div>
 
