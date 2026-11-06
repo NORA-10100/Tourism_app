@@ -196,6 +196,18 @@ class ReceiptOcrServiceTests {
     }
 
     @Test
+    void readsTotalWhenSpaceRemainsBeforePercent() {
+        List<String> lines = List.of(
+                "SHOP",
+                "食パン ¥111",
+                "合計 ¥5188 %");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("518"), data.amount());
+    }
+
+    @Test
     void usesLargestAmountWhenTotalLabelCannotBeRead() {
         List<String> lines = List.of(
                 "SHOP",

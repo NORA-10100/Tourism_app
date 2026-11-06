@@ -60,7 +60,7 @@ public class ReceiptOcrService {
     // Textractは「合計 ¥518 8%」を「合計 ¥5188%」のように金額と税率を連結して返すことがあります。
     // 税率（8% / 10%）を金額から切り離すためのパターンです。
     private static final Pattern JOINED_TAX_RATE_PATTERN = Pattern.compile(
-            "([0-9][0-9,]*)(?:8|10)%");
+            "([0-9][0-9,]*)(?:8|10)\\s*%");
 
     private final TextractService textractService;
 
