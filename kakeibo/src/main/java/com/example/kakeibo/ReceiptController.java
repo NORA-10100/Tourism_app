@@ -67,7 +67,8 @@ public class ReceiptController {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
+        if (!"image/jpeg".equalsIgnoreCase(contentType)
+                && !"image/png".equalsIgnoreCase(contentType)) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "画像ファイル（JPEG / PNG など）を選択してください。"));
         }

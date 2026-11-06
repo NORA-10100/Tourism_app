@@ -104,7 +104,7 @@ public class ReceiptOcrService {
     for (int i = 0; i < lines.size(); i++) {
 
         // OCRで読み取った文字列から空白を取り除く
-        String line = lines.get(i).replaceAll("[\\s\\u3000]+", "");
+        String line = normalizeAmountText(lines.get(i));
         String upper = line.toUpperCase(Locale.ROOT);
 
         // 小計・税額・お釣りなどの行は除外
@@ -125,19 +125,16 @@ public class ReceiptOcrService {
                     return amount;
                 }
 
-                // ③ 同じ行になければ次の行を確認
-                if (i + 1 < lines.size()) {
+                // ③ 合計ラベルの後ろ数行を確認する。税額の説明行を挟むレシートがある。
+                for (int offset = 1; offset <= 3 && i + offset < lines.size(); offset++) {
+                    String nextLine = normalizeAmountText(lines.get(i + offset));
+                    if (isExcludedAmountLine(nextLine.toUpperCase(Locale.ROOT))) {
+                        continue;
+                    }
 
-                    String nextLine = lines.get(i + 1)
-                            .replaceAll("[\\s\\u3000]+", "");
-                    if (!isExcludedAmountLine(
-                            nextLine.toUpperCase(Locale.ROOT))) {
-
-                        amount = extractAmount(nextLine);
-
-                        if (amount != null && amount.signum() > 0) {
-                            return amount;
-                        }
+                    amount = extractAmount(nextLine);
+                    if (amount != null && amount.signum() > 0) {
+                        return amount;
                     }
                 }
             }
@@ -147,6 +144,13 @@ public class ReceiptOcrService {
     // ④ 合計を特定できない場合は、誤った金額を返さない
     return null;
 }
+
+    private String normalizeAmountText(String text) {
+        // 半角・全角空白を除去し、Textractで「合 言十」と誤認識された「合計」を補正する。
+        return text.replaceAll("[\\s\\u3000]+", "")
+                .replace("合言十", "合計");
+    }
+
     private BigDecimal findAmountNearKeyword(
         String line, String keyword) {
 
