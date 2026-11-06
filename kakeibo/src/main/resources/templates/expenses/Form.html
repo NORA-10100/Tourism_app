@@ -22,9 +22,6 @@
       </details>
       <div class="form-actions"><button class="primary-action" type="submit">保存してグラフを見る</button><a class="secondary-action" th:href="@{/expenses}">一覧へ戻る</a></div>
     </form>
-    <form th:if="${expense.id != null}" th:action="@{/expenses/{id}/delete(id=${expense.id})}" method="post">
-      <button type="submit" class="delete-btn">削除</button>
-    </form>
   </main>
   <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
 </div></body>

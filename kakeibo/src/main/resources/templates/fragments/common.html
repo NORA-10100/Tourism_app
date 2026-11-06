@@ -9,7 +9,7 @@
 <nav class="bottom-nav" th:fragment="nav(active)" aria-label="メインメニュー">
   <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span aria-hidden="true">⌂</span>ホーム</a>
   <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/features/spots}"><span aria-hidden="true">♧</span>スポット</a>
-  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/expenses/capture}"><span aria-hidden="true">▣</span>家計簿</a>
+  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/receipts/scan}"><span aria-hidden="true">▣</span>家計簿</a>
   <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span aria-hidden="true">⇄</span>為替</a>
   <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span aria-hidden="true">♙</span>マイページ</a>
 </nav>

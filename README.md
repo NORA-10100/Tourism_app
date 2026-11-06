@@ -13,22 +13,21 @@ JDK 25 以上を使用してください。Eclipse では「既存 Maven プロ�
 VS Code では `kakeibo` を開き、Java 拡張機能を使用します。
 起動クラスは `com.example.kakeibo.KakeiboApplication` です。
 
-ローカル開発では起動時の環境変数 `SPRING_PROFILES_ACTIVE=cloud` を設定します。
-H2 のデータは `kakeibo` を作業ディレクトリにした場合 `kakeibo/data/` に保存されます。認証情報は Git に登録しないでください。
+ローカル開発では既定の `local` プロファイルで Oracle XE に接続します。Oracle のパスワードは
+Git 管理外の `application-local.properties` に設定してください。テストは別の H2 データベースを使用します。
 
 ```sh
 cd kakeibo
 # Linux / macOS
-SPRING_PROFILES_ACTIVE=cloud sh mvnw spring-boot:run
+sh mvnw spring-boot:run
 # Windows PowerShell
-# $env:SPRING_PROFILES_ACTIVE="cloud"
 # .\mvnw.cmd spring-boot:run
 ```
 
 ブラウザで `http://localhost:8080/` を開きます。起動画面 → 言語選択 → 新規登録 → ログイン → ホームと進めます。
 ホームからは次の画面へ進めます。
 
-- レシート家計簿：レシート撮影画面（`/expenses/capture`）。画像のアップロードまでで、OCR による読み取りは未実装です。撮影後は支出入力へ進み、支出一覧・グラフも利用できます
+- レシート家計簿：`/receipts/scan` で画像を Amazon Textract に送り、品目・金額・日付・カテゴリの候補を読み取ります。内容を確認・修正して支出登録できます。AWS 認証情報と `textract:AnalyzeDocument` 権限、`AWS_REGION`（既定 `ap-northeast-1`）が必要です。画像はAWSへ送信され、利用料金が発生する場合があります。AWS認証情報はGitに登録しないでください。ローカルではAWS CLIの名前付きプロファイル、またはIAMロールを使ってください。
 - スポット：スポット一覧・詳細（見本データ 2 件）
 - リアルタイム：為替レート・円換算画面（`/currency`）。レートは見本の固定値で、外部 API には未接続です
 - 言語選択：選択の保存のみで、画面全体の翻訳は未実装です
@@ -40,7 +39,7 @@ SPRING_PROFILES_ACTIVE=cloud sh mvnw spring-boot:run
 ログイン後の支出識別子は `user-<users.id>` です。以前の `dev-device-001` や `demo-device-001` の支出は自動移行しません。
 他人の支出の表示・変更を防ぎ、フォーム送信には CSRF 検証を行います。
 
-Oracle を使用する場合は `cloud` プロファイルを指定せず、既存の `db/create_tables.sql` を適用した DB を用意します。
+Oracle を使用する場合は既定の `local` プロファイルを使い、既存の `db/create_tables.sql` を適用した DB を用意します。
 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` を安全な環境変数等で設定してください。
 ZIP 側の `app_users` テーブルは不要です。このPCのOracle XEには `prod` プロファイルで接続し、スキーマの検証まで確認済みです。別サーバーの共有DBを使う場合は、そのDBのホスト名をURLに設定します。
 

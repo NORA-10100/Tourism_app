@@ -4,7 +4,7 @@
 
 沖縄みらいAI＆IT専門学校（チーム Vita）の観光 / 家計簿 (kakeibo) アプリです。
 技術スタック: Spring Boot 4.1.2 (Java 25) + Spring Data JPA + Thymeleaf + Spring Security（CSRF とヘッダーのみ）。
-DB: デフォルトの `local` プロファイルでは Oracle XE、`cloud` プロファイルとテストでは H2、
+DB: デフォルトの `local` プロファイルでは Oracle XE、テストでは H2、
 チーム共有用の `prod` プロファイルでは環境変数で指定した Oracle を使います。
 UI のテキストとドメイン用語は日本語です（カテゴリ: 食事 / 交通 / 宿泊 / 観光 / その他）。
 
@@ -12,8 +12,7 @@ UI のテキストとドメイン用語は日本語です（カテゴリ: 食事
 
 Maven モジュールは `kakeibo/` にあります。Maven コマンドはリポジトリのルートではなく、すべてここで実行してください。
 
-- アプリ起動（H2、Oracle 不要）: `cd kakeibo && SPRING_PROFILES_ACTIVE=cloud ./mvnw spring-boot:run`
-- アプリ起動（Oracle）: `cd kakeibo && ./mvnw spring-boot:run`
+- アプリ起動（ローカル Oracle）: `cd kakeibo && ./mvnw spring-boot:run`
 - アプリ起動（チーム共有、`prod` プロファイル）: 接続情報を環境変数で設定して起動します。手順は README の「チーム共有環境での起動」を参照してください
 - テスト実行: `cd kakeibo && ./mvnw test`
 - テストを 1 つだけ実行: `cd kakeibo && ./mvnw test -Dtest=KakeiboApplicationTests`
@@ -42,12 +41,14 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
 - 支出（家計簿）: `Expense` エンティティ、`ExpenseRepository`、`ExpenseController`
   （`@RequestMapping("/expenses")`）。このコントローラーだけは `controller/` ではなくルートパッケージにある点に注意してください。
   画面は `src/main/resources/templates/expenses/{List,Form,Graph,Capture}.html` です。
-  Capture はレシート画像のアップロードを受け付けて入力画面へ進めます。OCR はまだありません。
-  REST コントローラーはまだなく、削除エンドポイントもありません（設計書の権限は SELECT/INSERT/UPDATE のみ）。
+  レシート OCR は `ReceiptController` / `ReceiptOcrService` / `TextractService` が担当し、
+  Amazon Textract の認証情報が必要です。読み取り結果を確認・修正してから支出登録します。
+  OCR API は `/api/receipts/scan`、画面は `/receipts/scan` です。
+  削除エンドポイントはありません（設計書の権限は SELECT/INSERT/UPDATE のみ）。
   他人の支出を開くと 404 になります。
 - 旅行機能: `controller/FeatureController` がスポット一覧・詳細
   （`/features/spots`、`/features/spots/{id}`。現在はハードコードされた見本 2 件）、マイページ
-  （`/mypage`）、ホームの機能カードのリダイレクト（receipts -> `/expenses/capture`、
+  （`/mypage`）、ホームの機能カードのリダイレクト（receipts -> `/receipts/scan`、
   realtime -> `/currency`、languages/settings -> `/mypage`）を担当します。
 - 為替: `controller/CurrencyController`（`/currency`、`/currency/convert`）が
   USD/EUR/KRW/TWD を固定の見本レートで円換算します。外部 API にはまだ接続していません。
@@ -60,10 +61,10 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
   ビルド出力をリポジトリへ再追加しないでください。
 - DB: ローカルの Oracle XE は `//localhost:1521/XEPDB1`、ユーザーは `vita_app_user` です。パスワードは
   `application-local.properties` にだけ書き、Git 管理外にしてください。絶対にコミットしないでください。
-- `spring.jpa.hibernate.ddl-auto` はプロファイルごとに異なります。`application.properties` では `validate`
-  （そこのコメントのとおり、エンティティ変更でテーブル作成が必要なときは自分の PC では `update` に切り替え、
-  共有 DB では `validate` を使う）、`application-cloud.properties` では `update`、
-  `application-prod.properties` では `validate`、テストでは `create-drop` です。
+- `spring.jpa.hibernate.ddl-auto` は `application.properties` と `application-prod.properties` で `validate`、
+  テストでは `create-drop` です。ローカルでテーブル変更が必要な場合の手順は README を確認します。
+- レシート OCR は AWS Textract の `AnalyzeDocument` API を呼び出すため、AWS 認証情報と `textract:AnalyzeDocument` 権限が必要です。
+  AWS 認証情報をソースやGitに保存しないでください。
 - SQL スクリプトは `db/` にあります（Oracle 方言）: `create_tables.sql`、`insert_data.sql`、`insert_expenses.sql`、
   `queries_expenses.sql`。支出は `user-<users.id>` で識別します。旧 `dev-device-001` /
   `demo-device-001` のデータは自動移行されません。

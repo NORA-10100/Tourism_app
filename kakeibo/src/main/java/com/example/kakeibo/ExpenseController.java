@@ -81,11 +81,12 @@ public class ExpenseController {
 
     // メモ: レシート画像の撮影・選択画面を表示します。
     @GetMapping("/capture")
-    public String capture() {
-        return "expenses/Capture";
+    public String capture(Model model) {
+        model.addAttribute("categories", CATEGORIES);
+        return "receipts/scan";
     }
 
-    // メモ: 画像を受け付けた後、支出内容の入力画面へ進みます。OCRはまだ行いません。
+    // メモ: 古い画面からの画像送信は、支出入力画面へ案内します。
     @PostMapping("/capture")
     public String receiveReceipt(@RequestParam("receipt") MultipartFile receipt,
                                  RedirectAttributes redirectAttributes) {
