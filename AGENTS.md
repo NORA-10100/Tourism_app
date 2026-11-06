@@ -46,6 +46,8 @@ Maven Wrapper 同梱（mvnw / mvnw.cmd、wrapper 3.3.4 -> Maven 3.9.16）。Java
   OCR API は `/api/receipts/scan`、画面は `/receipts/scan` です。画面はカメラ撮影と画像選択の
   両方に対応し、送信前に長辺 2400px 以下へ縮小して JPEG 化します（上限 20MB、HEIC は非対応）。
   合計金額は「合計」「計」に加えて、OCR で「合」が欠けた「言十」も合計として扱います。
+  金額と税率が「¥5188%」のように連結された場合も、税率を分離して金額を復元します。
+  合計ラベルを特定できない場合は、小計・税・お預かり等を除いた最大金額を使います。
   削除エンドポイントはありません（設計書の権限は SELECT/INSERT/UPDATE のみ）。
   他人の支出を開くと 404 になります。
 - 旅行機能: `controller/FeatureController` がスポット一覧・詳細

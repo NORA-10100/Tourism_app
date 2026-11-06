@@ -57,6 +57,11 @@ public class ReceiptOcrService {
     private static final Pattern LONG_NUMBER_PATTERN = Pattern.compile(
             "(?i)(?:T\\d{10,}|\\d{10,}|\\d{2,4}-\\d{2,4}-\\d{2,4})");
 
+    // Textractは「合計 ¥518 8%」を「合計 ¥5188%」のように金額と税率を連結して返すことがあります。
+    // 税率（8% / 10%）を金額から切り離すためのパターンです。
+    private static final Pattern JOINED_TAX_RATE_PATTERN = Pattern.compile(
+            "([0-9][0-9,]*)(?:8|10)%");
+
     private final TextractService textractService;
 
     public ReceiptOcrService(TextractService textractService) {
@@ -101,7 +106,8 @@ public class ReceiptOcrService {
 
     private BigDecimal findAmount(List<String> lines) {
         for (int i = 0; i < lines.size(); i++) {
-            String line = normalizeLine(lines.get(i));
+            String rawLine = lines.get(i);
+            String line = normalizeLine(rawLine);
 
             // Textractが「合計」を「合」「計」の2行に分けることがあるため、その場合も合計行として扱います。
             boolean splitTotal = "合".equals(line)
@@ -119,15 +125,17 @@ public class ReceiptOcrService {
             }
 
             // 同じ行に金額があれば、その金額を使います。
-            BigDecimal amount = findAmountNearKeyword(labelLine, keyword);
+            // 税率を先にマスクしてから空白を詰めることで、
+            // 「合計 160 8%」が「合計1608%」に連結されて金額ごと消えるのを防ぎます。
+            BigDecimal amount = findAmountNearKeyword(normalizeAmountLine(rawLine), keyword);
             if (amount != null && amount.signum() > 0) {
                 return amount;
             }
 
             // 合計ラベルの後ろ数行を確認します。税額の説明行を挟むレシートがあるためです。
-            int start = splitTotal ? i + 2 : i + 1;
-            for (int offset = start; offset <= i + 5 && offset < lines.size(); offset++) {
-                String nextLine = normalizeLine(lines.get(offset));
+            for (int offset = 1; offset <= 5 && i + offset < lines.size(); offset++) {
+                String nextRawLine = lines.get(i + offset);
+                String nextLine = normalizeLine(nextRawLine);
 
                 // お預かり・お釣り・ポイントの行まで来たら、合計金額ではないので探索を止めます。
                 if (isPaymentLine(nextLine)) {
@@ -137,15 +145,46 @@ public class ReceiptOcrService {
                     continue;
                 }
 
-                amount = extractAmount(nextLine);
+                amount = extractAmount(normalizeAmountLine(nextRawLine));
                 if (amount != null && amount.signum() > 0) {
                     return amount;
                 }
             }
         }
 
-        // 合計を特定できない場合は、誤った金額を返さない
-        return null;
+        // 合計ラベルを読み取れないレシートでも結果を出せるよう、
+        // 小計・税・お預かり等を除いた金額のうち最大のものを合計として扱います。
+        BigDecimal fallback = findLargestPlausibleAmount(lines);
+        if (fallback != null) {
+            System.out.println("===== レシートOCR: 合計ラベルを特定できず最大金額を使用 =====");
+            System.out.println("amount=" + fallback);
+            System.out.println("=============================");
+        } else {
+            System.out.println("===== レシートOCR: 金額を特定できませんでした =====");
+            lines.forEach(System.out::println);
+            System.out.println("=============================");
+        }
+        return fallback;
+    }
+
+    private BigDecimal findLargestPlausibleAmount(List<String> lines) {
+        BigDecimal largest = null;
+
+        for (String rawLine : lines) {
+            String line = normalizeLine(rawLine);
+            if (line.isEmpty() || isExcludedAmountLine(line) || isPaymentLine(line)) {
+                continue;
+            }
+
+            // 日付・税率・登録番号などを除いた金額だけを候補にします。
+            BigDecimal amount = extractAmount(normalizeAmountLine(rawLine));
+            if (amount != null && amount.signum() > 0
+                    && (largest == null || amount.compareTo(largest) > 0)) {
+                largest = amount;
+            }
+        }
+
+        return largest;
     }
 
     private String totalKeyword(String line) {
@@ -159,6 +198,12 @@ public class ReceiptOcrService {
             if (upper.contains(word.toUpperCase(Locale.ROOT))) {
                 return word;
             }
+        }
+
+        // 「計\160」「税込計 1,080」のように、合計ラベルの前後に金額や記号が付く場合があります。
+        // 「小計」は上の isExcludedAmountLine で除外済みです。
+        if (line.startsWith("計") || line.endsWith("計")) {
+            return "計";
         }
         return null;
     }
@@ -174,6 +219,27 @@ public class ReceiptOcrService {
 
         // Textractは「合計」を「合言十」「言十」と誤認識することがあります。
         return normalized
+                .replace("合言十", "合計")
+                .replace("言十", "計");
+    }
+
+    // 金額判定用の正規化。空白を詰める前に日付・税率・登録番号をマスクします。
+    // 先に詰めると「160 8%」が「1608%」になり、税率の除去で金額まで消えてしまうためです。
+    private String normalizeAmountLine(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFKC);
+
+        // 「¥5188%」のように金額と税率が連結されている場合は、税率だけを取り除きます。
+        // 例: 「¥1,1888%」→「¥1,188」、「¥108010%」→「¥1,080」
+        normalized = JOINED_TAX_RATE_PATTERN.matcher(normalized).replaceAll("$1");
+
+        String masked = maskNonAmountNumbers(normalized);
+
+        return masked
+                .replaceAll("[\\s\\u3000]+", "")
                 .replace("合言十", "合計")
                 .replace("言十", "計");
     }

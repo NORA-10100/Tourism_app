@@ -148,4 +148,69 @@ class ReceiptOcrServiceTests {
 
         assertEquals(new BigDecimal("120"), data.amount());
     }
+
+    @Test
+    void readsTotalWhenTaxRateFollowsAmountOnSameLine() {
+        List<String> lines = List.of(
+                "SHOP",
+                "食パン",
+                "\\111",
+                "合計 \\160 8%");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("160"), data.amount());
+    }
+
+    @Test
+    void readsTotalWhenAmountFollowsKeiOnSameLine() {
+        List<String> lines = List.of(
+                "SHOP",
+                "食パン",
+                "108軽",
+                "言十 \\1,187",
+                "(内消費税等 \\93)");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("1187"), data.amount());
+    }
+
+    @Test
+    void readsTotalWhenTaxRateIsJoinedToAmount() {
+        // 実際のTextract出力: 「合計 ￥518 8%」が「合計 ¥5188%」になる
+        List<String> lines = List.of(
+                "テストマート 那覇店",
+                "おにぎり ¥150",
+                "お茶 ¥110",
+                "サンド ¥220",
+                "小計 ¥480",
+                "消費税 8% ¥38",
+                "合計 ¥5188%",
+                "お預かり ¥1,000",
+                "お釣り ¥482");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("518"), data.amount());
+    }
+
+    @Test
+    void usesLargestAmountWhenTotalLabelCannotBeRead() {
+        List<String> lines = List.of(
+                "SHOP",
+                "食パン",
+                "\\111",
+                "おにぎり",
+                "\\160",
+                "お茶",
+                "\\120",
+                "小計 \\391",
+                "消費税 \\31",
+                "お預かり \\500");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("160"), data.amount());
+    }
 }
