@@ -16,6 +16,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReceiptOcrService {
 
+    // レシート上部の店舗名を判定する言葉です。
+    private static final List<String> STORE_WORDS = List.of(
+            "店", "ストア", "マート", "コンビニ", "スーパー", "ドラッグ",
+            "ショップ", "カフェ", "レストラン", "食堂", "ホテル", "旅館",
+            "タクシー", "SHOP", "STORE", "MARKET", "MART", "CAFE",
+            "HOTEL", "RESTAURANT");
+
+    // 店舗名の前に印字されるブランド名です。
+    private static final List<String> BRAND_WORDS = List.of(
+            "セブン", "イレブン", "ローソン", "ファミリーマート", "ファミマ",
+            "イオン", "サンエー", "マックスバリュ", "ドン・キホーテ",
+            "LAWSON", "SEVEN", "FAMILY", "AEON", "SEIYU");
+
     // 合計を表す言葉。長い言葉から順に並べ、部分一致で誤って短い言葉を選ばないようにします。
     private static final List<String> TOTAL_WORDS = List.of(
             "GRAND TOTAL",
@@ -81,7 +94,7 @@ public class ReceiptOcrService {
                         "レシートの文字を読み取れませんでした。");
             }
 
-            String itemName = findItemName(lines);
+            String itemName = findStoreName(lines);
             BigDecimal amount = findAmount(lines);
 
             if (amount == null || amount.signum() <= 0) {
@@ -90,7 +103,7 @@ public class ReceiptOcrService {
             }
 
             LocalDate date = findDate(lines);
-            String category = findCategory(lines);
+            String category = findCategory(lines, itemName);
 
             return new ReceiptData(
                     itemName, amount, date, category, "JPY");
@@ -105,22 +118,47 @@ public class ReceiptOcrService {
     }
 
     private BigDecimal findAmount(List<String> lines) {
+        // 合計 → 合 → 計 の順に優先します。
+        // 小計は isExcludedAmountLine で除外し、合計がある場合は必ず合計を採用します。
+        for (int priority = 1; priority <= 3; priority++) {
+            BigDecimal amount = findAmountByPriority(lines, priority);
+            if (amount != null) {
+                return amount;
+            }
+        }
+
+        // 合計ラベルを読み取れないレシートでも結果を出せるよう、
+        // 小計・税・お預かり等を除いた金額のうち最大のものを合計として扱います。
+        BigDecimal fallback = findLargestPlausibleAmount(lines);
+        if (fallback != null) {
+            System.out.println("===== レシートOCR: 合計ラベルを特定できず最大金額を使用 =====");
+            System.out.println("amount=" + fallback);
+            System.out.println("=============================");
+        } else {
+            System.out.println("===== レシートOCR: 金額を特定できませんでした =====");
+            lines.forEach(System.out::println);
+            System.out.println("=============================");
+        }
+        return fallback;
+    }
+
+    private BigDecimal findAmountByPriority(List<String> lines, int wantedPriority) {
         for (int i = 0; i < lines.size(); i++) {
             String rawLine = lines.get(i);
             String line = normalizeLine(rawLine);
 
-            // Textractが「合計」を「合」「計」の2行に分けることがあるため、その場合も合計行として扱います。
+            if (line.isEmpty() || isExcludedAmountLine(line)) {
+                continue;
+            }
+
+            // Textractが「合計」を「合」「計」の2行に分けることがあります。
             boolean splitTotal = "合".equals(line)
                     && i + 1 < lines.size()
                     && "計".equals(normalizeLine(lines.get(i + 1)));
             String labelLine = splitTotal ? "合計" : line;
 
-            if (isExcludedAmountLine(labelLine)) {
-                continue;
-            }
-
             String keyword = totalKeyword(labelLine);
-            if (keyword == null) {
+            if (keyword == null || totalPriority(keyword) != wantedPriority) {
                 continue;
             }
 
@@ -151,20 +189,7 @@ public class ReceiptOcrService {
                 }
             }
         }
-
-        // 合計ラベルを読み取れないレシートでも結果を出せるよう、
-        // 小計・税・お預かり等を除いた金額のうち最大のものを合計として扱います。
-        BigDecimal fallback = findLargestPlausibleAmount(lines);
-        if (fallback != null) {
-            System.out.println("===== レシートOCR: 合計ラベルを特定できず最大金額を使用 =====");
-            System.out.println("amount=" + fallback);
-            System.out.println("=============================");
-        } else {
-            System.out.println("===== レシートOCR: 金額を特定できませんでした =====");
-            lines.forEach(System.out::println);
-            System.out.println("=============================");
-        }
-        return fallback;
+        return null;
     }
 
     private BigDecimal findLargestPlausibleAmount(List<String> lines) {
@@ -188,24 +213,37 @@ public class ReceiptOcrService {
     }
 
     private String totalKeyword(String line) {
-        // 「言十」はTextractが「計」を誤認識したものです。単独の「計」も合計行として扱います。
-        if ("計".equals(line)) {
-            return "計";
-        }
-
         String upper = line.toUpperCase(Locale.ROOT);
+
+        // 「合計」「税込合計」「お支払い合計」など、明示的な合計を最優先します。
         for (String word : TOTAL_WORDS) {
             if (upper.contains(word.toUpperCase(Locale.ROOT))) {
                 return word;
             }
         }
 
-        // 「計\160」「税込計 1,080」のように、合計ラベルの前後に金額や記号が付く場合があります。
-        // 「小計」は上の isExcludedAmountLine で除外済みです。
-        if (line.startsWith("計") || line.endsWith("計")) {
+        // 合計の「合」だけが読めた場合は合計として扱います。
+        // 「合計」は上で見つかるため、ここでは「合 ¥160」のような行が対象です。
+        if ("合".equals(line) || line.startsWith("合") || line.endsWith("合")) {
+            return "合";
+        }
+
+        // Textractが「計」を「言十」と誤認識した場合も、normalizeLine で「計」に直しています。
+        // 「小計」は isExcludedAmountLine で除外済みです。
+        if ("計".equals(line) || line.startsWith("計") || line.endsWith("計")) {
             return "計";
         }
         return null;
+    }
+
+    private int totalPriority(String keyword) {
+        if ("合".equals(keyword)) {
+            return 2;
+        }
+        if ("計".equals(keyword)) {
+            return 3;
+        }
+        return 1;
     }
 
     private String normalizeLine(String text) {
@@ -345,7 +383,8 @@ public class ReceiptOcrService {
                 || upper.contains("割引") || upper.contains("値引き")) {
             return true;
         }
-        if (upper.contains("合計税額") || upper.contains("税額合計")) {
+        if (upper.contains("合計税額") || upper.contains("税額合計")
+                || upper.contains("消費税等合計") || upper.contains("消費税合計")) {
             return true;
         }
 
@@ -368,114 +407,116 @@ public class ReceiptOcrService {
                 || line.contains("ポイント");
     }
 
-    private String findItemName(List<String> lines) {
-        String fallback = null;
+    // レシート上部に印字されている会社名・店舗名を品目名として使います。
+    // 商品名や住所、電話番号、レジ番号などは候補から除外します。
+    private String findStoreName(List<String> lines) {
+        List<String> candidates = new ArrayList<>();
+        int limit = Math.min(lines.size(), 10);
 
-        for (int i = 0; i < lines.size(); i++) {
-            String value = lines.get(i) == null ? "" : lines.get(i).trim();
-            if (!isItemCandidate(value)) {
-                continue;
+        for (int i = 0; i < limit; i++) {
+            String value = cleanupStoreName(lines.get(i));
+            if (isStoreNameCandidate(value)) {
+                candidates.add(value);
             }
+        }
 
-            if (fallback == null) {
-                fallback = value;
-            }
+        if (candidates.isEmpty()) {
+            return "レシート";
+        }
 
-            // 商品名の直後にある金額行を手がかりに、店名や住所ではなく商品名を選びます。
-            for (int offset = 1; offset <= 2 && i + offset < lines.size(); offset++) {
-                if (isPriceLikeLine(lines.get(i + offset))) {
-                    return value;
+        // 「○○店」「○○ストア」のような店舗名を優先し、
+        // その直前がブランド名なら「ブランド名 店舗名」として結合します。
+        for (int i = 0; i < candidates.size(); i++) {
+            if (containsAny(candidates.get(i).toUpperCase(Locale.ROOT), STORE_WORDS)) {
+                String store = candidates.get(i);
+                if (i > 0 && isBrandLine(candidates.get(i - 1))) {
+                    return cleanupStoreName(candidates.get(i - 1) + " " + store);
                 }
+                return store;
             }
         }
 
-        return fallback != null ? fallback : "レシート";
+        // 店舗名が見つからない場合は、一番上にある会社名をそのまま使います。
+        return candidates.get(0);
     }
 
-    private boolean isItemCandidate(String value) {
-        if (value.isEmpty() || value.length() > 30) {
-            return false;
+    private String cleanupStoreName(String text) {
+        if (text == null) {
+            return "";
         }
 
-        String normalized = Normalizer.normalize(value, Normalizer.Form.NFKC)
-                .replaceAll("[\\s\\u3000]+", "");
+        String value = Normalizer.normalize(text, Normalizer.Form.NFKC)
+                .replaceAll("[\\s\\u3000]+", " ")
+                .trim();
 
-        if (normalized.matches(".*\\d{4}[-/年].*")
-                || normalized.matches(".*\\d{1,2}月\\d{1,2}日.*")
-                || normalized.matches(".*[0-9]{6,}.*")) {
-            return false;
+        // 「領 収 書」のように文字間に空白が入る場合も、見出し行として除外します。
+        String compact = value.replaceAll("[\\s\\u3000]+", "");
+        if (compact.equals("領収書") || compact.equals("領収証")
+                || compact.equals("レシート")) {
+            return "";
         }
-        if (normalized.matches("^[0-9\\p{Punct}\\p{S}\\s]+$")) {
-            return false;
-        }
+        value = value.replaceFirst("^(領収書|領収証|レシート)[\\s:：]*", "");
 
-        String upper = normalized.toUpperCase(Locale.ROOT);
-        return !containsAny(upper,
-                "合計", "小計", "税", "預", "釣", "お支払", "領収", "レシート",
-                "伝票", "電話", "TEL", "登録番号", "事業者", "レジ", "店",
-                "住所", "商品", "ポイント", "会員", "買上", "ありがとう",
-                "よろしく", "SHOP", "SEVEN", "セブン", "LAWSON", "ローソン",
-                "FAMILY", "ファミリーマート", "ファミマ", "イレブン", "STORE",
-                "県", "市", "区", "町", "丁目", "番地", "号", "通り");
+        // 入力欄の上限に合わせます。
+        if (value.length() > 50) {
+            value = value.substring(0, 50).trim();
+        }
+        return value;
     }
 
-    // 商品名の直後の行が「金額だけの行」かどうかを判定します。
-    // 「120G」「7P」のような商品名のサイズを金額と誤認しないようにします。
-    private boolean isPriceLikeLine(String line) {
-        if (line == null) {
+    private boolean isStoreNameCandidate(String value) {
+        if (value.isEmpty() || value.length() > 50) {
             return false;
         }
 
-        String searchable = maskNonAmountNumbers(normalizeLine(line));
-        Matcher matcher = AMOUNT_PATTERN.matcher(searchable);
-        List<int[]> amountRanges = new ArrayList<>();
+        String upper = value.toUpperCase(Locale.ROOT);
 
-        while (matcher.find()) {
-            BigDecimal value = toAmount(matcher);
-            if (value == null) {
-                continue;
-            }
-
-            // 「120G」「400ml」のように英字が続く数字は、商品のサイズとして扱います。
-            int end = matcher.end();
-            if (end < searchable.length()
-                    && isAsciiLetter(searchable.charAt(end))) {
-                continue;
-            }
-
-            if (isCurrencyAmount(matcher) || hasGrouping(matcher)
-                    || value.compareTo(BigDecimal.TEN) >= 0) {
-                amountRanges.add(new int[] { matcher.start(), end });
-            }
+        // 日付・電話・登録番号・レジ情報などは会社名ではありません。
+        if (value.matches(".*\\d{4}[-/年].*")
+                || value.matches(".*\\d{1,2}月\\d{1,2}日.*")
+                || value.matches(".*[0-9]{6,}.*")
+                || value.matches("^[0-9\\p{Punct}\\p{S}\\s]+$")) {
+            return false;
         }
-
-        if (amountRanges.isEmpty()) {
+        if (containsAny(upper,
+                "電話", "TEL", "登録番号", "事業者", "レジ", "伝票",
+                "領収書", "領収証", "レシート", "お買上", "ありがとう",
+                "ポイント", "会員", "店コード", "FAX")) {
             return false;
         }
 
-        StringBuilder remaining = new StringBuilder();
-        int last = 0;
-        for (int[] range : amountRanges) {
-            if (range[0] > last) {
-                remaining.append(searchable, last, range[0]);
-            }
-            last = Math.max(last, range[1]);
-        }
-        if (last < searchable.length()) {
-            remaining.append(searchable, last, searchable.length());
+        // 住所行は除外します。ただし「○○店」のように店舗名を含む行は残します。
+        boolean hasStoreWord = containsAny(upper, STORE_WORDS);
+        if (!hasStoreWord && containsAny(upper,
+                "県", "市", "区", "町", "丁目", "番地", "号", "通り")) {
+            return false;
         }
 
-        String rest = remaining.toString()
-                .replaceAll("[*※\\s¥\\\\,./%()（）\\[\\]【】:：;；+\\-]", "")
-                .replaceAll("(税込|税抜|軽|円|個|点|割引|引|対象|外|内|等)", "");
-        return rest.length() <= 2;
+        return true;
     }
 
-    private boolean isAsciiLetter(char c) {
-        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    private boolean isBrandLine(String value) {
+        String upper = value.toUpperCase(Locale.ROOT);
+        if (containsAny(upper, "株式会社", "有限会社", "合同会社")) {
+            return true;
+        }
+        if (containsAny(upper, BRAND_WORDS)) {
+            return true;
+        }
+        // 「LAWSON」「SEVEN&IHOLDINGS」のような英字のブランド名
+        return value.matches("[A-Za-z0-9&.'\\- ]{2,30}");
     }
 
     private boolean containsAny(String text, String... words) {
+        for (String word : words) {
+            if (text.contains(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsAny(String text, List<String> words) {
         for (String word : words) {
             if (text.contains(word)) {
                 return true;
@@ -509,24 +550,31 @@ public class ReceiptOcrService {
         return LocalDate.now();
     }
 
-    private String findCategory(List<String> lines) {
-        String text = String.join(" ", lines.stream()
-                .filter(line -> line != null)
-                .toList());
+    private String findCategory(List<String> lines, String storeName) {
+        String text = (storeName == null ? "" : storeName + " ")
+                + String.join(" ", lines.stream()
+                        .filter(line -> line != null)
+                        .toList());
 
-        if (containsAny(text, "ホテル", "宿泊", "旅館", "民宿", "ゲストハウス")) {
+        if (containsAny(text, "ホテル", "宿泊", "旅館", "民宿", "ゲストハウス", "ペンション")) {
             return "宿泊";
         }
         if (containsAny(text, "タクシー", "バス", "電車", "交通", "駅",
-                "空港", "レンタカー", "ガソリン", "駐車")) {
+                "空港", "レンタカー", "ガソリン", "駐車", "高速", "フェリー", "船")) {
             return "交通";
         }
-        if (containsAny(text, "レストラン", "飲食", "カフェ", "食堂",
-                "おにぎり", "弁当", "パン", "コーヒー", "飲料", "食品",
-                "食料品", "スナック", "チョコ", "スープ", "アイス", "野菜")) {
+        if (containsAny(text,
+                "レストラン", "飲食", "カフェ", "食堂", "おにぎり", "弁当", "パン",
+                "コーヒー", "飲料", "食品", "食料品", "スナック", "チョコ", "スープ",
+                "アイス", "野菜", "果物", "フルーツ", "肉", "魚", "サバ", "米",
+                "菓子", "ジュース", "お茶", "茶", "牛乳", "乳製品", "デザート",
+                "カレー", "ラーメン", "そば", "うどん", "寿司", "惣菜", "サンド",
+                "セブン", "イレブン", "ローソン", "ファミリーマート", "ファミマ",
+                "コンビニ", "マート", "スーパー", "イオン", "サンエー", "マックスバリュ")) {
             return "食事";
         }
-        if (containsAny(text, "観光", "入場", "体験", "チケット", "施設", "ツアー")) {
+        if (containsAny(text, "観光", "入場", "体験", "チケット", "施設", "ツアー",
+                "美術館", "博物館", "公園", "水族館")) {
             return "観光";
         }
 

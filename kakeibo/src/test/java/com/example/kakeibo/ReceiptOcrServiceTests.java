@@ -1,6 +1,8 @@
 package com.example.kakeibo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,7 +59,9 @@ class ReceiptOcrServiceTests {
 
         assertEquals(new BigDecimal("160"), data.amount());
         assertEquals(LocalDate.of(2026, 11, 6), data.date());
-        assertEquals("7P コーンスナック チーズピザ味", data.itemName());
+        assertTrue(data.itemName().startsWith("セブン"));
+        assertTrue(data.itemName().contains("店"));
+        assertFalse(data.itemName().contains("コーンスナック"));
         assertEquals("食事", data.category());
     }
 
@@ -85,7 +89,9 @@ class ReceiptOcrServiceTests {
 
         assertEquals(new BigDecimal("1187"), data.amount());
         assertEquals(LocalDate.of(2020, 4, 24), data.date());
-        assertEquals("タイランド FJ サバ ミズニ 120G", data.itemName());
+        assertTrue(data.itemName().startsWith("LAWSON"));
+        assertTrue(data.itemName().contains("神戸新開地四丁目店"));
+        assertEquals("食事", data.category());
     }
 
     @Test
@@ -224,5 +230,88 @@ class ReceiptOcrServiceTests {
         ReceiptOcrService.ReceiptData data = read(lines);
 
         assertEquals(new BigDecimal("160"), data.amount());
+    }
+
+    @Test
+    void prefersExplicitTotalOverArujiAndKei() {
+        List<String> lines = List.of(
+                "テストマート 那覇店",
+                "おにぎり \\111",
+                "小計 \\111",
+                "合 \\222",
+                "合計 \\333");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("333"), data.amount());
+    }
+
+    @Test
+    void readsTotalWhenOnlyArujiIsPrinted() {
+        List<String> lines = List.of(
+                "テストマート 那覇店",
+                "おにぎり \\111",
+                "小計 \\111",
+                "合",
+                "\\222");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("222"), data.amount());
+    }
+
+    @Test
+    void neverUsesSubtotalWhenNoTotalExists() {
+        List<String> lines = List.of(
+                "テストマート 那覇店",
+                "おにぎり \\111",
+                "小計 \\391",
+                "消費税 \\31",
+                "お預かり \\500");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals(new BigDecimal("111"), data.amount());
+    }
+
+    @Test
+    void readsStoreNameAndCategoryFromReceiptHeader() {
+        List<String> lines = List.of(
+                "テストマート 那覇店",
+                "おにぎり \\150",
+                "お茶 \\110",
+                "合計 \\260");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("テストマート 那覇店", data.itemName());
+        assertEquals("食事", data.category());
+    }
+
+    @Test
+    void skipsReceiptHeadingWhenReadingStoreName() {
+        // 「領収書」の見出しが品目名として採用されないことを確認します。
+        List<String> lines = List.of(
+                "領 収 書",
+                "テストマート 那覇店",
+                "おにぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("テストマート 那覇店", data.itemName());
+    }
+
+    @Test
+    void selectsTransportCategoryForTaxiReceipt() {
+        List<String> lines = List.of(
+                "沖縄タクシー",
+                "運賃 \\1,200",
+                "合計 \\1,200");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("沖縄タクシー", data.itemName());
+        assertEquals("交通", data.category());
     }
 }
