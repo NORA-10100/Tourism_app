@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -25,12 +24,6 @@ public class ReceiptOcrService {
             "ショップ", "カフェ", "レストラン", "食堂", "ホテル", "旅館",
             "タクシー", "SHOP", "STORE", "MARKET", "MART", "CAFE",
             "HOTEL", "RESTAURANT");
-
-    // 店舗名の前に印字されるブランド名です。
-    private static final List<String> BRAND_WORDS = List.of(
-            "セブン", "イレブン", "ローソン", "ファミリーマート", "ファミマ",
-            "イオン", "サンエー", "マックスバリュ", "ドン・キホーテ",
-            "LAWSON", "SEVEN", "FAMILY", "AEON", "SEIYU");
 
     // 合計を表す言葉。長い言葉から順に並べ、部分一致で誤って短い言葉を選ばないようにします。
     private static final List<String> TOTAL_WORDS = List.of(
@@ -446,33 +439,16 @@ public class ReceiptOcrService {
     }
 
     // 指定した範囲から店舗名を選びます。
-    // 「○○店」「○○ストア」のような店舗名を優先し、その直前がブランド名なら結合します。
+    // レシートは会社名・ブランド名が一番上に印字されるため、最初に見つかった行を店名として採用します。
+    // 後ろの行にある「○○店」は支店名なので、ブランド名に結合しません。
     private String selectStoreName(List<String> lines, int from, int to) {
-        List<String> candidates = new ArrayList<>();
-
         for (int i = from; i < to; i++) {
             String value = cleanupStoreName(lines.get(i));
             if (isStoreNameCandidate(value)) {
-                candidates.add(value);
+                return value;
             }
         }
-
-        if (candidates.isEmpty()) {
-            return null;
-        }
-
-        for (int i = 0; i < candidates.size(); i++) {
-            if (containsAny(candidates.get(i).toUpperCase(Locale.ROOT), STORE_WORDS)) {
-                String store = candidates.get(i);
-                if (i > 0 && isBrandLine(candidates.get(i - 1))) {
-                    return cleanupStoreName(candidates.get(i - 1) + " " + store);
-                }
-                return store;
-            }
-        }
-
-        // 店舗名が見つからない場合は、その範囲の一番上にある会社名を使います。
-        return candidates.get(0);
+        return null;
     }
 
     private String cleanupStoreName(String text) {
@@ -528,7 +504,13 @@ public class ReceiptOcrService {
         if (containsAny(upper,
                 "電話", "TEL", "登録番号", "事業者", "レジ", "伝票",
                 "領収書", "領収証", "レシート", "お買上", "ありがとう",
-                "ポイント", "会員", "店コード", "FAX")) {
+                "ポイント", "会員", "店コード", "FAX",
+                "HOLDINGS", "ホールディングス", "持株会社")) {
+            return false;
+        }
+
+        // OCR がロゴや飾り文字を「了i」のような短い断片で返すことがあるため除外します。
+        if (value.length() <= 2 && upper.matches(".*[A-Z0-9].*")) {
             return false;
         }
 
@@ -540,18 +522,6 @@ public class ReceiptOcrService {
         }
 
         return true;
-    }
-
-    private boolean isBrandLine(String value) {
-        String upper = value.toUpperCase(Locale.ROOT);
-        if (containsAny(upper, "株式会社", "有限会社", "合同会社")) {
-            return true;
-        }
-        if (containsAny(upper, BRAND_WORDS)) {
-            return true;
-        }
-        // 「LAWSON」「SEVEN&IHOLDINGS」のような英字のブランド名
-        return value.matches("[A-Za-z0-9&.'\\- ]{2,30}");
     }
 
     private boolean containsAny(String text, String... words) {

@@ -60,7 +60,7 @@ class ReceiptOcrServiceTests {
         assertEquals(new BigDecimal("160"), data.amount());
         assertEquals(LocalDate.of(2026, 11, 6), data.date());
         assertTrue(data.itemName().startsWith("セブン"));
-        assertTrue(data.itemName().contains("店"));
+        assertFalse(data.itemName().contains("那覇泊"));
         assertFalse(data.itemName().contains("コーンスナック"));
         assertEquals("食事", data.category());
     }
@@ -89,8 +89,7 @@ class ReceiptOcrServiceTests {
 
         assertEquals(new BigDecimal("1187"), data.amount());
         assertEquals(LocalDate.of(2020, 4, 24), data.date());
-        assertTrue(data.itemName().startsWith("LAWSON"));
-        assertTrue(data.itemName().contains("神戸新開地四丁目店"));
+        assertEquals("LAWSON", data.itemName());
         assertEquals("食事", data.category());
     }
 
@@ -319,8 +318,9 @@ class ReceiptOcrServiceTests {
     }
 
     @Test
-    void combinesBrandAndStoreBelowReceiptHeading() {
-        // 一番上が「領収書」の場合は、その下のブランド名と店舗名を結合します。
+    void usesBrandNameOnlyBelowReceiptHeading() {
+        // 一番上が「領収書」の場合は、その下のブランド名だけを使います。
+        // 次の行の「○○店」は支店名なので品目名に含めません。
         List<String> lines = List.of(
                 "領 収 書",
                 "セブン-イレブン",
@@ -330,7 +330,38 @@ class ReceiptOcrServiceTests {
 
         ReceiptOcrService.ReceiptData data = read(lines);
 
-        assertEquals("セブン-イレブン 那覇泊2丁目店", data.itemName());
+        assertEquals("セブン-イレブン", data.itemName());
+    }
+
+    @Test
+    void prefersBrandNameOverBranchNameBelowReceiptHeading() {
+        // 「curry house coco壱番屋」の下に支店名があっても、ブランド名を品目名にします。
+        List<String> lines = List.of(
+                "領 収 書",
+                "curry house coco壱番屋",
+                "沖縄北谷国体道路店",
+                "カレー \\1,080",
+                "合計 \\1,080");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("curry house coco壱番屋", data.itemName());
+    }
+
+    @Test
+    void ignoresHoldingsAndOcrFragmentWhenReadingStoreName() {
+        // 持株会社の行やロゴの読み取り断片は店名にしません。
+        List<String> lines = List.of(
+                "SEVEN&IHOLDINGS",
+                "了i",
+                "セブン-イレブン",
+                "那覇泊2丁目店",
+                "おにぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("セブン-イレブン", data.itemName());
     }
 
     @Test
