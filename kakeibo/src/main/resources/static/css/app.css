@@ -361,8 +361,15 @@ button, input, select { font: inherit; }
 @media (max-width: 480px) {
     /* メモ: フォーム全体の左右に余白を確保し、スマートフォンの画面端に寄らないようにします。 */
     .auth-page { padding-inline: 24px; }
-    /* メモ: 日付欄も他の入力欄と同じ高さに揃えます。 */
-    .form-field input[type="date"] { height: 56px; min-height: 56px; }
+    /* メモ: iPhoneのネイティブ日付表示がはみ出さないよう、日付欄だけ少し小さくします。 */
+    .form-field input[type="date"] {
+        width: calc(100% - 12px);
+        max-width: calc(100% - 12px);
+        height: 52px;
+        min-height: 52px;
+        padding-inline: 12px;
+        font-size: 14px;
+    }
 }
 .spot-card { border-radius: 20px; box-shadow: none; }
 .spot-photo { min-height: clamp(190px, 44vw, 280px); }
