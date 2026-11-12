@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReceiptOcrService {
 
+    // 品目名として読み取るレシート上部の行数です。
+    private static final int STORE_NAME_SCAN_LIMIT = 10;
+
     // レシート上部の店舗名を判定する言葉です。
     private static final List<String> STORE_WORDS = List.of(
             "店", "ストア", "マート", "コンビニ", "スーパー", "ドラッグ",
@@ -408,12 +411,46 @@ public class ReceiptOcrService {
     }
 
     // レシート上部に印字されている会社名・店舗名を品目名として使います。
-    // 商品名や住所、電話番号、レジ番号などは候補から除外します。
+    // 店名が「領収書」より上にある場合はその上の大きな文字を優先し、
+    // 「領収書」が一番上にある場合はその下から店名を探します。
     private String findStoreName(List<String> lines) {
-        List<String> candidates = new ArrayList<>();
-        int limit = Math.min(lines.size(), 10);
+        int limit = Math.min(lines.size(), STORE_NAME_SCAN_LIMIT);
+        int heading = findReceiptHeadingIndex(lines, limit);
 
+        if (heading >= 0) {
+            String above = selectStoreName(lines, 0, heading);
+            if (above != null) {
+                return above;
+            }
+            String below = selectStoreName(lines, heading + 1, limit);
+            if (below != null) {
+                return below;
+            }
+        } else {
+            String found = selectStoreName(lines, 0, limit);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        return "レシート";
+    }
+
+    private int findReceiptHeadingIndex(List<String> lines, int limit) {
         for (int i = 0; i < limit; i++) {
+            if (isReceiptHeadingLine(lines.get(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // 指定した範囲から店舗名を選びます。
+    // 「○○店」「○○ストア」のような店舗名を優先し、その直前がブランド名なら結合します。
+    private String selectStoreName(List<String> lines, int from, int to) {
+        List<String> candidates = new ArrayList<>();
+
+        for (int i = from; i < to; i++) {
             String value = cleanupStoreName(lines.get(i));
             if (isStoreNameCandidate(value)) {
                 candidates.add(value);
@@ -421,11 +458,9 @@ public class ReceiptOcrService {
         }
 
         if (candidates.isEmpty()) {
-            return "レシート";
+            return null;
         }
 
-        // 「○○店」「○○ストア」のような店舗名を優先し、
-        // その直前がブランド名なら「ブランド名 店舗名」として結合します。
         for (int i = 0; i < candidates.size(); i++) {
             if (containsAny(candidates.get(i).toUpperCase(Locale.ROOT), STORE_WORDS)) {
                 String store = candidates.get(i);
@@ -436,7 +471,7 @@ public class ReceiptOcrService {
             }
         }
 
-        // 店舗名が見つからない場合は、一番上にある会社名をそのまま使います。
+        // 店舗名が見つからない場合は、その範囲の一番上にある会社名を使います。
         return candidates.get(0);
     }
 
@@ -449,10 +484,8 @@ public class ReceiptOcrService {
                 .replaceAll("[\\s\\u3000]+", " ")
                 .trim();
 
-        // 「領 収 書」のように文字間に空白が入る場合も、見出し行として除外します。
-        String compact = value.replaceAll("[\\s\\u3000]+", "");
-        if (compact.equals("領収書") || compact.equals("領収証")
-                || compact.equals("レシート")) {
+        // 「領 収 書」「【領収証】」のような見出し行は店名ではありません。
+        if (isReceiptHeadingLine(value)) {
             return "";
         }
         value = value.replaceFirst("^(領収書|領収証|レシート)[\\s:：]*", "");
@@ -462,6 +495,20 @@ public class ReceiptOcrService {
             value = value.substring(0, 50).trim();
         }
         return value;
+    }
+
+    // 「領収書」「領収証」「レシート」だけの行かどうかを判定します。
+    // 店名が続く行（例:「領収書 テストマート」）は見出し扱いしません。
+    private boolean isReceiptHeadingLine(String text) {
+        if (text == null) {
+            return false;
+        }
+
+        String compact = Normalizer.normalize(text, Normalizer.Form.NFKC)
+                .replaceAll("[\\s\\u3000]+", "")
+                .replaceAll("[【】\\[\\]（）()「」『』]", "");
+
+        return compact.matches("(領収書|領収証|レシート)控?");
     }
 
     private boolean isStoreNameCandidate(String value) {

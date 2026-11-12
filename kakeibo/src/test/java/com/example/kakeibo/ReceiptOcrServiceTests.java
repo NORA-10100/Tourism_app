@@ -303,6 +303,37 @@ class ReceiptOcrServiceTests {
     }
 
     @Test
+    void prefersStoreNameAboveReceiptHeading() {
+        // 店名が「領収書」より上にある場合は、その上の大きな文字を使います。
+        // 「那覇店」のような下の行に引っ張られないことを確認します。
+        List<String> lines = List.of(
+                "沖縄みらい",
+                "領 収 書",
+                "那覇店",
+                "おにぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("沖縄みらい", data.itemName());
+    }
+
+    @Test
+    void combinesBrandAndStoreBelowReceiptHeading() {
+        // 一番上が「領収書」の場合は、その下のブランド名と店舗名を結合します。
+        List<String> lines = List.of(
+                "領 収 書",
+                "セブン-イレブン",
+                "那覇泊2丁目店",
+                "おにぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("セブン-イレブン 那覇泊2丁目店", data.itemName());
+    }
+
+    @Test
     void selectsTransportCategoryForTaxiReceipt() {
         List<String> lines = List.of(
                 "沖縄タクシー",
