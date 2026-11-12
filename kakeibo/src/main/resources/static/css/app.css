@@ -201,6 +201,8 @@ button, input, select { font: inherit; }
 .form-field input, .form-field select, .auth-panel input {
     display: block;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 48px;
     margin-top: 7px;
     padding: 10px 12px;
@@ -208,6 +210,14 @@ button, input, select { font: inherit; }
     border-radius: 9px;
     background: #fff;
     color: var(--color-ink);
+}
+/* メモ: iOS Safari の日付入力はネイティブ部品の最小幅が広く、スマートフォンで欄からはみ出します。 */
+.form-field input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    -webkit-appearance: none;
+    appearance: none;
 }
 .form-field input:focus, .form-field select:focus, .auth-panel input:focus { border-color: var(--color-primary); }
 .field-error, .error { display: block; margin-top: 6px; color: var(--color-error); font-size: 13px; }
