@@ -203,21 +203,33 @@ button, input, select { font: inherit; }
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    min-height: 48px;
+    height: 48px;
     margin-top: 7px;
     padding: 10px 12px;
     border: 1px solid #bdcfca;
     border-radius: 9px;
     background: #fff;
     color: var(--color-ink);
+    font-size: 16px;
 }
-/* メモ: iOS Safari の日付入力はネイティブ部品の最小幅が広く、スマートフォンで欄からはみ出します。 */
+/* メモ: iOS Safari の日付入力はネイティブ部品の幅・高さが他と異なるため、欄の大きさを揃えます。 */
 .form-field input[type="date"] {
+    box-sizing: border-box;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    height: 48px;
     -webkit-appearance: none;
     appearance: none;
+    text-align: left;
+}
+.form-field input[type="date"]::-webkit-date-and-time-value {
+    margin: 0;
+    text-align: left;
+}
+.form-field input[type="date"]::-webkit-calendar-picker-indicator {
+    margin: 0 0 0 auto;
+    padding: 0;
 }
 .form-field input:focus, .form-field select:focus, .auth-panel input:focus { border-color: var(--color-primary); }
 .field-error, .error { display: block; margin-top: 6px; color: var(--color-error); font-size: 13px; }
@@ -228,7 +240,7 @@ button, input, select { font: inherit; }
 /* メモ: 削除操作は保存操作と離し、確認ダイアログで誤操作を防ぎます。 */
 .delete-panel { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--color-border); }
 .delete-note { margin: 0 0 8px; color: var(--color-muted); font-size: 13px; }
-.auth-page { display: grid; min-height: 100vh; place-items: center; padding-top: 28px; padding-bottom: 28px; }
+.auth-page { display: grid; min-height: 100vh; place-items: center; padding: 28px clamp(16px, 5vw, 32px); }
 .auth-shell { width: min(100%, 480px); }
 .auth-brand { margin: 0 0 20px; color: var(--color-primary-dark); font-size: 26px; font-weight: 800; text-align: center; }
 .auth-panel h1 { margin: 0 0 8px; text-align: center; font-size: 25px; }
@@ -346,6 +358,12 @@ button, input, select { font: inherit; }
 .auth-panel h1 { font-size: 28px; }
 .auth-panel { border: 0; padding-inline: 0; }
 .auth-submit { margin-top: 22px; }
+@media (max-width: 480px) {
+    /* メモ: フォーム全体の左右に余白を確保し、スマートフォンの画面端に寄らないようにします。 */
+    .auth-page { padding-inline: 24px; }
+    /* メモ: 日付欄も他の入力欄と同じ高さに揃えます。 */
+    .form-field input[type="date"] { height: 56px; min-height: 56px; }
+}
 .spot-card { border-radius: 20px; box-shadow: none; }
 .spot-photo { min-height: clamp(190px, 44vw, 280px); }
 .spot-card-body { padding: 20px; }

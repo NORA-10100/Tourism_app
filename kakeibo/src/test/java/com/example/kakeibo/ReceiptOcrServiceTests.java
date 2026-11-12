@@ -349,6 +349,36 @@ class ReceiptOcrServiceTests {
     }
 
     @Test
+    void joinsShortLogoLineWithStoreNameBelow() {
+        // ロゴが「は」だけに読めても、下の行の店名を使います。
+        List<String> lines = List.of(
+                "は",
+                "はま寿司",
+                "那覇店",
+                "にぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("はま寿司", data.itemName());
+    }
+
+    @Test
+    void joinsStoreNameSplitAcrossShortLines() {
+        // 店名が「は」「ま寿司」のように分かれてもつなげて読み取ります。
+        List<String> lines = List.of(
+                "は",
+                "ま寿司",
+                "那覇店",
+                "にぎり \\150",
+                "合計 \\150");
+
+        ReceiptOcrService.ReceiptData data = read(lines);
+
+        assertEquals("はま寿司", data.itemName());
+    }
+
+    @Test
     void ignoresHoldingsAndOcrFragmentWhenReadingStoreName() {
         // 持株会社の行やロゴの読み取り断片は店名にしません。
         List<String> lines = List.of(

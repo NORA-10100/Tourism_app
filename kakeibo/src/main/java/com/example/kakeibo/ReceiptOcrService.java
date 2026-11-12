@@ -18,6 +18,9 @@ public class ReceiptOcrService {
     // 品目名として読み取るレシート上部の行数です。
     private static final int STORE_NAME_SCAN_LIMIT = 10;
 
+    // 店名がこれ以下の文字数なら、ロゴの一部として下の行をつなげます。
+    private static final int SHORT_STORE_NAME_LENGTH = 3;
+
     // レシート上部の店舗名を判定する言葉です。
     private static final List<String> STORE_WORDS = List.of(
             "店", "ストア", "マート", "コンビニ", "スーパー", "ドラッグ",
@@ -444,10 +447,49 @@ public class ReceiptOcrService {
     private String selectStoreName(List<String> lines, int from, int to) {
         for (int i = from; i < to; i++) {
             String value = cleanupStoreName(lines.get(i));
-            if (isStoreNameCandidate(value)) {
+            if (!isStoreNameCandidate(value)) {
+                continue;
+            }
+
+            if (value.length() > SHORT_STORE_NAME_LENGTH) {
                 return value;
             }
+
+            // ロゴの一部だけが「は」のように1行で読まれることがあるため、
+            // 3文字以下の場合は下の行とつなげて店名にします。
+            String combined = combineWithLinesBelow(lines, i, to, value);
+            if (combined != null) {
+                return combined;
+            }
         }
+        return null;
+    }
+
+    private String combineWithLinesBelow(List<String> lines, int index, int to, String value) {
+        String combined = value;
+
+        for (int i = index + 1; i < to; i++) {
+            String next = cleanupStoreName(lines.get(i));
+            if (!isStoreNameCandidate(next)) {
+                continue;
+            }
+
+            // 下の行が「○○店」のような支店名なら、店名には含めません。
+            if (containsAny(next.toUpperCase(Locale.ROOT), STORE_WORDS)) {
+                return null;
+            }
+
+            // 「は」の下に「はま寿司」がある場合は、重複させずに下の行を使います。
+            if (next.startsWith(combined)) {
+                return next;
+            }
+
+            combined = combined + next;
+            if (combined.length() > SHORT_STORE_NAME_LENGTH) {
+                return combined;
+            }
+        }
+
         return null;
     }
 
