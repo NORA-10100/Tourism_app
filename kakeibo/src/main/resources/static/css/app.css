@@ -215,6 +215,9 @@ button, input, select { font: inherit; }
 .optional-fields { margin: 12px 0; color: var(--color-primary-dark); }
 .optional-fields summary { padding: 8px 0; cursor: pointer; font-weight: 650; }
 .form-actions { margin-top: 20px; }
+/* メモ: 削除操作は保存操作と離し、確認ダイアログで誤操作を防ぎます。 */
+.delete-panel { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+.delete-note { margin: 0 0 8px; color: var(--color-muted); font-size: 13px; }
 .auth-page { display: grid; min-height: 100vh; place-items: center; padding-top: 28px; padding-bottom: 28px; }
 .auth-shell { width: min(100%, 480px); }
 .auth-brand { margin: 0 0 20px; color: var(--color-primary-dark); font-size: 26px; font-weight: 800; text-align: center; }

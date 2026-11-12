@@ -9,6 +9,7 @@
   <main class="page-content">
     <h1>支出一覧</h1>
     <a class="primary-action" th:href="@{/expenses/new}">＋ 支出を入力する</a>
+    <p class="notice" th:if="${message}" th:text="${message}"></p>
     <p class="empty-state" th:if="${#lists.isEmpty(expenses)}">支出はまだありません。最初の支出を入力してください。</p>
     <section class="expense-list" aria-label="支出">
       <article class="expense-card" th:each="expense : ${expenses}">

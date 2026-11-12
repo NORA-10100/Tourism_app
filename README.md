@@ -37,7 +37,8 @@ sh mvnw spring-boot:run
 
 新規登録は既存設計の `users` テーブル（`username`, `email`, `password_hash`）を使います。パスワードは BCrypt で保存します。
 ログイン後の支出識別子は `user-<users.id>` です。以前の `dev-device-001` や `demo-device-001` の支出は自動移行しません。
-他人の支出の表示・変更を防ぎ、フォーム送信には CSRF 検証を行います。
+他人の支出の表示・変更・削除を防ぎ、フォーム送信には CSRF 検証を行います。
+支出一覧の「内容を確認・編集」から、誤って重複登録した支出を削除できます（確認ダイアログ付き）。
 
 Oracle を使用する場合は既定の `local` プロファイルを使い、既存の `db/create_tables.sql` を適用した DB を用意します。
 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` を安全な環境変数等で設定してください。
