@@ -22,6 +22,12 @@
       </details>
       <div class="form-actions"><button class="primary-action" type="submit">保存してグラフを見る</button><a class="secondary-action" th:href="@{/expenses}">一覧へ戻る</a></div>
     </form>
+    <form class="delete-panel" th:if="${expense.id != null}"
+          th:action="@{/expenses/{id}/delete(id=${expense.id})}" method="post"
+          onsubmit="return confirm('この支出を削除しますか？この操作は元に戻せません。');">
+      <p class="delete-note">誤って重複して登録した場合は、この支出を削除できます。</p>
+      <button class="danger-action" type="submit">この支出を削除</button>
+    </form>
   </main>
   <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
 </div></body>

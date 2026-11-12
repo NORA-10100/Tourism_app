@@ -80,6 +80,10 @@ class LoginExpenseIntegrationTests {
                 .andExpect(content().string(containsString("家計簿")));
         mvc.perform(get("/expenses/capture").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("レシートを撮影する")));
+        mvc.perform(get("/receipts/scan").session(alice)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("camera-btn")))
+                .andExpect(content().string(containsString("gallery-btn")))
+                .andExpect(content().string(containsString("手入力で登録")));
         mvc.perform(multipart("/expenses/capture").file(new MockMultipartFile(
                 "receipt", "receipt.jpg", "image/jpeg", new byte[] { 1, 2, 3 }))
                 .session(alice).with(csrf()))
@@ -96,7 +100,8 @@ class LoginExpenseIntegrationTests {
         mvc.perform(get("/expenses").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("ソーキそば")));
         mvc.perform(get("/expenses/" + expense.getId() + "/edit").session(alice))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("この支出を削除")));
         MockHttpSession bob = registerAndLogin("bob@example.com");
         mvc.perform(get("/expenses").session(bob)).andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.not(containsString("ソーキそば"))));
@@ -110,6 +115,11 @@ class LoginExpenseIntegrationTests {
                 .param("amountJpy", "1").param("category", "食事")
                 .param("expenseDate", "2026-10-29"))
                 .andExpect(status().isNotFound());
+        mvc.perform(post("/expenses/" + expense.getId() + "/delete").session(alice).with(csrf()))
+                .andExpect(redirectedUrl("/expenses"));
+        assertTrue(expenses.findById(expense.getId()).isEmpty());
+        mvc.perform(get("/expenses").session(alice))
+                .andExpect(content().string(containsString("支出を削除しました")));
         mvc.perform(post("/logout").session(alice).with(csrf()))
                 .andExpect(redirectedUrl("/language"));
         assertTrue(alice.isInvalid());

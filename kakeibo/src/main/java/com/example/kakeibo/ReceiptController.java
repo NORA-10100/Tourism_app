@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,10 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -67,10 +70,13 @@ public class ReceiptController {
         }
 
         String contentType = file.getContentType();
-        if (!"image/jpeg".equalsIgnoreCase(contentType)
-                && !"image/png".equalsIgnoreCase(contentType)) {
+        if (contentType == null || contentType.isBlank()) {
+            contentType = guessContentType(file.getOriginalFilename());
+        }
+        if (!isSupportedImage(contentType)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "画像ファイル（JPEG / PNG など）を選択してください。"));
+                    .body(Map.of("error",
+                            "画像ファイル（JPEG / PNG）を選択してください。HEIC形式の場合はJPEGに変換してから送信してください。"));
         }
 
         try {
@@ -97,6 +103,40 @@ public class ReceiptController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "画像ファイルを読み込めませんでした。"));
         }
+    }
+
+    // スマートフォンの写真は大きいことがあるため、上限超過時もJSONで理由を返します。
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(
+            MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Map.of("error",
+                        "画像サイズが大きすぎます。20MB以下の画像を選ぶか、撮り直してください。"));
+    }
+
+    private static boolean isSupportedImage(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        return "image/jpeg".equalsIgnoreCase(contentType)
+                || "image/jpg".equalsIgnoreCase(contentType)
+                || "image/pjpeg".equalsIgnoreCase(contentType)
+                || "image/png".equalsIgnoreCase(contentType);
+    }
+
+    private static String guessContentType(String filename) {
+        if (filename == null) {
+            return null;
+        }
+        String lower = filename.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        return null;
     }
 
     // 読み取り結果を確認して支出を登録する
