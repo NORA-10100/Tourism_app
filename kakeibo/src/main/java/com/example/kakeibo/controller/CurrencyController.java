@@ -6,10 +6,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -37,8 +39,8 @@ public class CurrencyController {
 
     // メモ: 入力金額に選択したレートを掛けて、日本円に換算します。
     @PostMapping("/convert")
-    public String convert(@RequestParam BigDecimal amount,
-                          @RequestParam String currency,
+    public String convert(@RequestParam(required = false) BigDecimal amount,
+                          @RequestParam(required = false) String currency,
                           HttpSession session,
                           Model model) {
         if (!Boolean.TRUE.equals(session.getAttribute("loggedIn"))) {
@@ -46,9 +48,11 @@ public class CurrencyController {
         }
 
         model.addAttribute("rates", YEN_PER_UNIT);
-        BigDecimal rate = YEN_PER_UNIT.get(currency);
-        if (rate == null || amount.signum() < 0) {
+        BigDecimal rate = currency == null ? null : YEN_PER_UNIT.get(currency);
+        if (amount == null || rate == null || amount.signum() < 0) {
             model.addAttribute("error", "金額と通貨を確認してください。");
+            model.addAttribute("inputAmount", amount);
+            model.addAttribute("selectedCurrency", currency);
             return "currency";
         }
 
@@ -56,6 +60,16 @@ public class CurrencyController {
         model.addAttribute("convertedAmount", yenAmount);
         model.addAttribute("inputAmount", amount);
         model.addAttribute("selectedCurrency", currency);
+        return "currency";
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public String handleConvertTypeMismatch(HttpSession session, Model model) {
+        if (!Boolean.TRUE.equals(session.getAttribute("loggedIn"))) {
+            return "redirect:/login";
+        }
+        model.addAttribute("rates", YEN_PER_UNIT);
+        model.addAttribute("error", "金額と通貨を確認してください。");
         return "currency";
     }
 }

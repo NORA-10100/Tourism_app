@@ -11,7 +11,7 @@
     <p class="notice" th:if="${receiptMessage}" th:text="${receiptMessage}"></p>
     <p class="notice">内容を入力して「保存」を押してください。保存後、支出グラフを表示します。</p>
     <form class="form-panel" th:action="@{/expenses}" th:object="${expense}" method="post">
-      <input type="hidden" th:field="*{id}"><input type="hidden" th:field="*{userId}">
+      <input type="hidden" th:field="*{id}">
       <label class="form-field">支出日<input type="date" th:field="*{expenseDate}" required><span class="field-error" th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}"></span></label>
       <label class="form-field">品目名<input type="text" maxlength="50" th:field="*{itemName}" required><span class="field-error" th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}"></span></label>
       <label class="form-field">金額（円）<input type="number" min="0.01" step="0.01" th:field="*{amountJpy}" required><span class="field-error" th:if="${#fields.hasErrors('amountJpy')}" th:errors="*{amountJpy}"></span></label>
