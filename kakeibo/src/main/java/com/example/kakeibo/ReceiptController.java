@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -69,8 +70,8 @@ public class ReceiptController {
                     .body(Map.of("error", "レシート画像を選択してください。"));
         }
 
-        String contentType = file.getContentType();
-        if (contentType == null || contentType.isBlank()) {
+        String contentType = normalizeContentType(file.getContentType());
+        if (!isSupportedImage(contentType)) {
             contentType = guessContentType(file.getOriginalFilename());
         }
         if (!isSupportedImage(contentType)) {
@@ -115,14 +116,35 @@ public class ReceiptController {
                         "画像サイズが大きすぎます。20MB以下の画像を選ぶか、撮り直してください。"));
     }
 
+    // 保存時の入力形式エラーは、画面へ戻してメッセージを表示します。
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public String handleSaveArgumentTypeMismatch(MethodArgumentTypeMismatchException e,
+            RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "入力内容の形式を確認してください。");
+        return "redirect:/receipts/scan";
+    }
+
+    private static String normalizeContentType(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            return null;
+        }
+        String normalized = contentType.toLowerCase(Locale.ROOT);
+        int separator = normalized.indexOf(';');
+        if (separator >= 0) {
+            normalized = normalized.substring(0, separator);
+        }
+        return normalized.trim();
+    }
+
     private static boolean isSupportedImage(String contentType) {
         if (contentType == null) {
             return false;
         }
-        return "image/jpeg".equalsIgnoreCase(contentType)
-                || "image/jpg".equalsIgnoreCase(contentType)
-                || "image/pjpeg".equalsIgnoreCase(contentType)
-                || "image/png".equalsIgnoreCase(contentType);
+        return "image/jpeg".equals(contentType)
+                || "image/jpg".equals(contentType)
+                || "image/pjpeg".equals(contentType)
+                || "image/png".equals(contentType)
+                || "image/x-png".equals(contentType);
     }
 
     private static String guessContentType(String filename) {
@@ -142,10 +164,10 @@ public class ReceiptController {
     // 読み取り結果を確認して支出を登録する
     @PostMapping("/receipts/save")
     public String save(
-            @RequestParam String itemName,
-            @RequestParam BigDecimal amountJpy,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expenseDate,
-            @RequestParam String category,
+            @RequestParam(required = false) String itemName,
+            @RequestParam(required = false) BigDecimal amountJpy,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expenseDate,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String currency,
             @RequestParam(required = false) BigDecimal originalAmount,
             RedirectAttributes redirectAttributes,
@@ -156,26 +178,49 @@ public class ReceiptController {
             return "redirect:/login";
         }
 
-        if (itemName == null || itemName.isBlank()) {
+        String trimmedItemName = itemName == null ? "" : itemName.trim();
+        String trimmedCategory = category == null ? "" : category.trim();
+
+        if (trimmedItemName.isBlank()) {
             redirectAttributes.addFlashAttribute("error", "品目名を入力してください。");
+            return "redirect:/receipts/scan";
+        }
+        if (trimmedItemName.length() > 50) {
+            redirectAttributes.addFlashAttribute("error", "品目名は50文字以内で入力してください。");
             return "redirect:/receipts/scan";
         }
         if (amountJpy == null || amountJpy.signum() <= 0) {
             redirectAttributes.addFlashAttribute("error", "金額は0より大きい数値を入力してください。");
             return "redirect:/receipts/scan";
         }
+        if (amountJpy.scale() > 2 || amountJpy.precision() > 10) {
+            redirectAttributes.addFlashAttribute("error", "金額の形式を確認してください。");
+            return "redirect:/receipts/scan";
+        }
+        if (expenseDate == null) {
+            redirectAttributes.addFlashAttribute("error", "支出日を入力してください。");
+            return "redirect:/receipts/scan";
+        }
+        if (trimmedCategory.isBlank() || !ExpenseController.CATEGORIES.contains(trimmedCategory)) {
+            redirectAttributes.addFlashAttribute("error", "カテゴリを選択してください。");
+            return "redirect:/receipts/scan";
+        }
 
         Expense expense = new Expense();
         expense.setUserId(userId);
-        expense.setItemName(itemName.trim());
+        expense.setItemName(trimmedItemName);
         expense.setAmountJpy(amountJpy);
         expense.setExpenseDate(expenseDate);
-        expense.setCategory(category);
+        expense.setCategory(trimmedCategory);
 
         // 外貨のレシートは元通貨・元金額も残す（円換算は為替機能側の担当）
         if (currency != null && !currency.isBlank() && !"JPY".equalsIgnoreCase(currency)) {
-            expense.setOriginalCurrency(currency.trim().toUpperCase());
-            expense.setOriginalAmount(originalAmount != null ? originalAmount : amountJpy);
+            String originalCurrency = currency.trim().toUpperCase(Locale.ROOT);
+            if (originalCurrency.length() <= 3) {
+                expense.setOriginalCurrency(originalCurrency);
+                expense.setOriginalAmount(originalAmount != null && originalAmount.signum() > 0
+                        ? originalAmount : amountJpy);
+            }
         }
 
         repository.save(expense);
