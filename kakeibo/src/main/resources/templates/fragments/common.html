@@ -11,7 +11,7 @@
 <nav class="bottom-nav" th:fragment="nav(active)" th:attr="aria-label=#{nav.label}">
   <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span aria-hidden="true">⌂</span><span class="nav-label" th:text="#{nav.home}">ホーム</span></a>
   <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/spots}"><span aria-hidden="true">♧</span><span class="nav-label" th:text="#{nav.spots}">スポット</span></a>
-  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/receipts/scan}"><span aria-hidden="true">▣</span><span class="nav-label" th:text="#{nav.expenses}">家計簿</span></a>
+  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/expenses}"><span aria-hidden="true">▣</span><span class="nav-label" th:text="#{nav.expenses}">家計簿</span></a>
   <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span aria-hidden="true">⇄</span><span class="nav-label" th:text="#{nav.currency}">為替</span></a>
   <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span aria-hidden="true">♙</span><span class="nav-label" th:text="#{nav.settings}">設定</span></a>
 </nav>

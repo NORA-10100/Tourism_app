@@ -1,131 +1,92 @@
-/* レシート読み取り画面（auth.css の配色を引き継ぐ） */
-body.receipt-page {
-  align-items: flex-start;
-  padding: 40px 20px 64px;
-}
-
-.receipt-shell {
-  width: 100%;
-  max-width: 560px;
-}
-
-.receipt-head {
-  margin-bottom: 24px;
-}
-
-.back-link {
-  display: inline-block;
-  margin-bottom: 18px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--sea-700);
-  text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
-.receipt-head h1 {
-  margin-top: 14px;
-}
-
-.receipt-head .lead {
-  margin-bottom: 0;
+.receipt-page {
+  padding-bottom: 48px;
 }
 
 .scan-card,
 .result-card {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 26px;
-}
-
-.scan-card {
-  margin-bottom: 22px;
+  margin: 18px 0;
 }
 
 .scan-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.scan-actions .btn,
-.scan-actions .btn-ghost {
-  margin-top: 0;
-}
-
-.manual-link {
-  margin-top: 14px;
-  text-align: center;
-}
-
-.manual-link a {
-  color: var(--sea-700);
-  font-weight: 700;
+.scan-actions .secondary-action {
+  min-height: 48px;
+  margin: 0;
+  padding: 10px 12px;
 }
 
 .dropzone {
   position: relative;
   display: flex;
+  min-height: 210px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 190px;
+  gap: 8px;
   padding: 28px 20px;
+  border: 2px dashed #f3bb84;
+  border-radius: 18px;
+  background: #fffaf5;
+  color: var(--color-ink);
   text-align: center;
-  background: #f7fdff;
-  border: 2px dashed #9fdbe8;
-  border-radius: 16px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color .15s ease, background .15s ease;
 }
 
 .dropzone:hover,
 .dropzone.is-dragover {
-  background: #ecfbff;
-  border-color: var(--sea-500);
+  border-color: var(--color-primary);
+  background: #fff3e6;
 }
 
 .dropzone-icon {
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1;
 }
 
 .dropzone-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--sea-900);
 }
 
-.dropzone-hint {
-  font-size: 12px;
-  color: var(--ink-muted);
+.dropzone-hint,
+.hint {
+  color: var(--color-muted);
+  font-size: 13px;
 }
 
 .preview {
   width: 100%;
   max-height: 320px;
-  margin-top: 14px;
+  margin-top: 12px;
   object-fit: contain;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  border: 1px solid var(--line);
   background: #fff;
 }
 
-#scan-btn {
+.scan-submit {
   margin-top: 18px;
 }
 
 #scan-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: .48;
   box-shadow: none;
+}
+
+.manual-link {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.manual-link a {
+  font-weight: 700;
 }
 
 .loading {
@@ -134,10 +95,12 @@ body.receipt-page {
 }
 
 .loading p {
-  margin: 0 0 4px;
-  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+#loading-text {
+  color: var(--color-primary-dark);
   font-weight: 700;
-  color: var(--sea-700);
 }
 
 .spinner {
@@ -145,101 +108,95 @@ body.receipt-page {
   width: 34px;
   height: 34px;
   margin-bottom: 12px;
-  border: 3px solid rgba(6, 182, 212, 0.25);
-  border-top-color: var(--sea-500);
+  border: 3px solid #ff790033;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+  animation: receipt-spin .9s linear infinite;
 }
 
-@keyframes spin {
+@keyframes receipt-spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+#scan-error {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff2f0;
 }
 
 .error-detail {
   display: block;
   margin-top: 6px;
   font-size: 11px;
-  word-break: break-all;
-  opacity: 0.75;
+  overflow-wrap: anywhere;
 }
 
-/* 読み取り結果 */
 .result-card {
-  border-top: 5px solid var(--coral-500);
+  border-top: 5px solid var(--color-primary);
 }
 
 .result-label {
   margin: 0;
-  font-size: 12px;
+  color: var(--color-muted);
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
 }
 
 .result-amount {
   margin: 4px 0 2px;
-  font-size: 44px;
+  color: var(--color-primary-dark);
+  font-size: clamp(32px, 8vw, 44px);
   font-weight: 800;
-  line-height: 1.15;
-  color: var(--sea-900);
+  line-height: 1.2;
 }
 
 .result-sub {
   margin: 0 0 22px;
+  color: var(--color-muted);
   font-size: 13px;
-  color: var(--ink-muted);
 }
 
 .result-sub.warn {
-  color: #b45309;
+  color: #a45b0a;
   font-weight: 700;
 }
 
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.field select {
-  width: 100%;
-  padding: 13px 14px;
-  font-size: 15px;
-  font-family: inherit;
-  color: var(--ink);
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-
-.field select:focus {
-  outline: none;
-  border-color: var(--sea-500);
-  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.18);
-}
-
-.result-card .btn-primary {
-  margin-top: 6px;
+.result-card .hint {
+  margin: 8px 0 14px;
 }
 
 @media (max-width: 480px) {
-  body.receipt-page {
-    padding: 24px 14px 48px;
+  .scan-actions {
+    gap: 8px;
   }
 
-  .scan-card,
-  .result-card {
-    padding: 20px;
+  .scan-actions .secondary-action {
+    padding-inline: 8px;
+    font-size: 14px;
   }
 
-  .result-amount {
-    font-size: 36px;
+  .dropzone {
+    min-height: 190px;
+    padding-inline: 14px;
   }
 
   .field-row {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
   }
 }

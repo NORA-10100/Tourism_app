@@ -63,6 +63,9 @@ class LoginExpenseIntegrationTests {
         MockHttpSession alice = registerAndLogin("alice@example.com");
         mvc.perform(get("/home").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("旅行者")));
+        mvc.perform(get("/expenses").session(alice)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("支出一覧")))
+                .andExpect(content().string(containsString("href=\"/receipts/scan\"")));
         mvc.perform(get("/features/spots").session(alice))
                 .andExpect(redirectedUrl("/spots"));
         mvc.perform(get("/spots").session(alice)).andExpect(status().isOk())
@@ -86,10 +89,15 @@ class LoginExpenseIntegrationTests {
         mvc.perform(get("/mypage").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("家計簿データ")));
         mvc.perform(get("/currency").session(alice)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("リアルタイム為替レート")));
+                .andExpect(content().string(containsString("為替レートと通貨換算")))
+                .andExpect(content().string(containsString("id=\"fx-swap\"")))
+                .andExpect(content().string(containsString("HKD")));
         mvc.perform(post("/currency/convert").session(alice).with(csrf())
                 .param("amount", "100").param("currency", "USD"))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("14,932")));
+        mvc.perform(post("/currency/convert").session(alice).with(csrf())
+                .param("amount", "100").param("from", "USD").param("to", "EUR"))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("93.16")));
         mvc.perform(post("/currency/convert").session(alice).with(csrf())
                 .param("amount", "-1").param("currency", "USD"))
                 .andExpect(status().isOk()).andExpect(model().attributeExists("error"));
@@ -111,13 +119,15 @@ class LoginExpenseIntegrationTests {
         mvc.perform(get("/receipts/scan").session(alice)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("camera-btn")))
                 .andExpect(content().string(containsString("gallery-btn")))
+                .andExpect(content().string(containsString("class=\"app-shell\"")))
+                .andExpect(content().string(containsString("class=\"bottom-nav\"")))
                 .andExpect(content().string(containsString("手入力で登録")));
         mvc.perform(multipart("/expenses/capture").file(new MockMultipartFile(
                 "receipt", "receipt.jpg", "image/jpeg", new byte[] { 1, 2, 3 }))
                 .session(alice).with(csrf()))
                 .andExpect(redirectedUrl("/expenses/new"));
         mvc.perform(get("/features/receipts").session(alice))
-                .andExpect(redirectedUrl("/receipts/scan"));
+                .andExpect(redirectedUrl("/expenses"));
         mvc.perform(post("/expenses").session(alice).with(csrf())
                 .param("userId", "forged-user").param("itemName", "ソーキそば")
                 .param("amountJpy", "1200").param("category", "食事")
@@ -174,7 +184,9 @@ class LoginExpenseIntegrationTests {
         mvc.perform(get("/home").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"/spots\"")))
-                .andExpect(content().string(containsString("href=\"/receipts/scan\"")))
+                .andExpect(content().string(containsString("href=\"/expenses\"")))
+                .andExpect(content().string(containsString(
+                        "<a class=\"nav-item\" href=\"/expenses\"")))
                 .andExpect(content().string(containsString("href=\"/currency\"")))
                 .andExpect(content().string(containsString("href=\"/language\"")));
 
@@ -187,7 +199,7 @@ class LoginExpenseIntegrationTests {
         mvc.perform(get("/features/settings").session(session))
                 .andExpect(redirectedUrl("/mypage"));
         mvc.perform(get("/features/receipts").session(session))
-                .andExpect(redirectedUrl("/receipts/scan"));
+                .andExpect(redirectedUrl("/expenses"));
 
         mvc.perform(get("/spots/results").session(session))
                 .andExpect(status().isOk())
@@ -224,6 +236,9 @@ class LoginExpenseIntegrationTests {
 
         mvc.perform(get("/receipts/scan").session(session))
                 .andExpect(status().isOk())
+                .andExpect(content().string(containsString("/css/app.css")))
+                .andExpect(content().string(containsString("href=\"/home\"")))
+                .andExpect(content().string(containsString("class=\"bottom-nav\"")))
                 .andExpect(content().string(containsString("/api/receipts/scan")))
                 .andExpect(content().string(containsString("action=\"/receipts/save\"")));
         mvc.perform(get("/expenses/capture").session(session))

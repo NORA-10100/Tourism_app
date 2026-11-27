@@ -1,33 +1,33 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html xmlns:th="http://www.thymeleaf.org" lang="ja" th:attr="lang=${currentLanguage}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="scan-url" th:content="@{/api/receipts/scan}">
   <meta name="csrf-token" th:content="${_csrf != null ? _csrf.token : ''}">
   <meta name="csrf-header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+  <meta name="theme-color" content="#ffffff">
   <title>レシート読み取り | Vita</title>
-  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
   <link rel="stylesheet" th:href="@{/css/receipt.css}">
 </head>
-<body class="receipt-page">
-  <main class="receipt-shell">
-    <header class="receipt-head">
-      <a class="back-link" th:href="@{/expenses}">← 家計簿に戻る</a>
-      <span class="brand">Vita / レシート家計簿</span>
+<body>
+  <div class="app-shell">
+    <header th:replace="~{fragments/common :: header(#{nav.expenses})}"></header>
+    <main class="page-content receipt-page">
+      <a class="back-text" th:href="@{/expenses}">家計簿に戻る</a>
       <h1>レシートを読み取る</h1>
-      <p class="lead">レシートを撮影するか画像を選ぶと、合計金額・品目・日付を自動で読み取ります。</p>
-    </header>
+      <p class="notice">レシートを撮影するか画像を選ぶと、合計金額・品目・日付を自動で読み取ります。</p>
 
-    <div class="error" th:if="${error}" th:text="${error}"></div>
-    <div class="error" th:if="${receiptError}" th:text="${receiptError}"></div>
-    <div class="message" th:if="${message}" th:text="${message}"></div>
+      <p class="error" th:if="${error}" th:text="${error}"></p>
+      <p class="error" th:if="${receiptError}" th:text="${receiptError}"></p>
+      <p class="notice success" th:if="${message}" th:text="${message}"></p>
 
-    <section class="scan-card">
+      <section class="form-panel scan-card">
       <form id="scan-form">
         <div class="scan-actions">
-          <button id="camera-btn" class="btn btn-primary" type="button">カメラで撮影</button>
-          <button id="gallery-btn" class="btn btn-ghost" type="button">画像を選択</button>
+          <button id="camera-btn" class="secondary-action" type="button">カメラで撮影</button>
+          <button id="gallery-btn" class="secondary-action" type="button">画像を選択</button>
         </div>
         <input id="file" name="file" type="file" accept="image/*" hidden>
         <input id="camera-file" type="file" accept="image/*" capture="environment" hidden>
@@ -37,7 +37,7 @@
           <span class="dropzone-hint">JPEG・PNG（20MBまで。送信前に自動で縮小します）</span>
           <img id="preview" class="preview" alt="選択したレシート画像" hidden>
         </label>
-        <button id="scan-btn" class="btn btn-primary" type="submit" disabled>読み取る</button>
+        <button id="scan-btn" class="primary-action scan-submit" type="submit" disabled>読み取る</button>
         <p class="hint manual-link">読み取れない場合は <a th:href="@{/expenses/new}">手入力で登録</a> できます。</p>
       </form>
 
@@ -51,46 +51,45 @@
         <span id="scan-error-text"></span>
         <span id="scan-error-detail" class="error-detail" hidden></span>
       </div>
-    </section>
+      </section>
 
-    <section id="result" class="result-card" hidden>
-      <p class="result-label">読み取った合計金額</p>
-      <p class="result-amount" id="result-amount">¥0</p>
-      <p class="result-sub" id="result-sub"></p>
+      <section id="result" class="form-panel result-card" hidden>
+        <p class="result-label">読み取った合計金額</p>
+        <p class="result-amount" id="result-amount">¥0</p>
+        <p class="result-sub" id="result-sub"></p>
 
-      <form th:action="@{/receipts/save}" method="post" id="save-form">
-        <div class="field">
-          <label for="itemName">品目名</label>
+        <form th:action="@{/receipts/save}" method="post" id="save-form">
+        <label class="form-field" for="itemName">品目名
           <input id="itemName" name="itemName" type="text" maxlength="50" required>
-        </div>
+        </label>
 
         <div class="field-row">
-          <div class="field">
-            <label for="amountJpy">金額（円）</label>
+          <label class="form-field" for="amountJpy">金額（円）
             <input id="amountJpy" name="amountJpy" type="number" step="0.01" min="0.01" required>
-          </div>
-          <div class="field">
-            <label for="expenseDate">支出日</label>
+          </label>
+          <label class="form-field" for="expenseDate">支出日
             <input id="expenseDate" name="expenseDate" type="date" required>
-          </div>
+          </label>
         </div>
 
-        <div class="field">
-          <label for="category">カテゴリ</label>
-          <select id="category" name="category">
+        <label class="form-field" for="category">カテゴリ
+          <select id="category" name="category" required>
             <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"></option>
           </select>
-        </div>
+        </label>
 
         <input type="hidden" id="currency" name="currency">
         <input type="hidden" id="originalAmount" name="originalAmount">
 
         <p class="hint">読み取り結果は保存前に手で修正できます。</p>
-        <button class="btn btn-coral" type="submit">この内容で家計簿に登録</button>
-        <button class="btn btn-ghost" type="button" id="rescan-btn">別のレシートを読み取る</button>
-      </form>
-    </section>
-  </main>
+        <button class="primary-action" type="submit">この内容で家計簿に登録</button>
+        <button class="secondary-action" type="button" id="rescan-btn">別のレシートを読み取る</button>
+        </form>
+      </section>
+    </main>
+    <footer th:replace="~{fragments/common :: footer}"></footer>
+    <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
+  </div>
 
   <script th:src="@{/js/receipt.js}"></script>
 </body>

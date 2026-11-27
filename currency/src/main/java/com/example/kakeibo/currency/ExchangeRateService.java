@@ -8,9 +8,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,21 +33,22 @@ import tools.jackson.databind.json.JsonMapper;
  * 為替レートを外部 API から取得し、DB にキャッシュします。
  * 取得に失敗した場合は DB の前回レート、それも無ければ参考の固定値を返します。
  *
- * <p>既定の取得先は open.er-api.com（API キー不要）です。
+ * <p>既定の取得先は Frankfurter API（API キー不要）です。
  * 別のサービスを使う場合は {@code vita.currency.api-url} を変更します。</p>
  */
 @Service
 public class ExchangeRateService {
 
     private static final Logger logger = LoggerFactory.getLogger(ExchangeRateService.class);
-    private static final List<String> CODES = List.of("USD", "EUR", "CNY", "KRW", "TWD");
+    private static final List<String> CODES = List.of("USD", "EUR", "CNY", "KRW", "TWD", "HKD");
 
     private static final Map<String, String> FLAGS = Map.of(
             "USD", "🇺🇸",
             "EUR", "🇪🇺",
             "CNY", "🇨🇳",
             "KRW", "🇰🇷",
-            "TWD", "🇹🇼");
+            "TWD", "🇹🇼",
+            "HKD", "🇭🇰");
 
     /** 外部 API に接続できないときの参考レート（1通貨あたりの円）。 */
     private static final Map<String, BigDecimal> FALLBACK = Map.of(
@@ -53,7 +56,8 @@ public class ExchangeRateService {
             "EUR", new BigDecimal("160.28"),
             "CNY", new BigDecimal("20.55"),
             "KRW", new BigDecimal("0.11"),
-            "TWD", new BigDecimal("4.62"));
+            "TWD", new BigDecimal("4.62"),
+            "HKD", new BigDecimal("19.20"));
 
     private static final DateTimeFormatter UPDATED_FORMAT =
             DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
@@ -62,49 +66,47 @@ public class ExchangeRateService {
     private final MessageSource messages;
     private final boolean remoteEnabled;
     private final String apiUrl;
-    private final long cacheMinutes;
     private final HttpClient httpClient;
     private final JsonMapper mapper = JsonMapper.builder().build();
 
-    private volatile LocalDateTime lastFetchAt;
-    private volatile boolean lastFetchSucceeded;
+    private LocalDate lastFetchAttemptDate;
+    private boolean lastFetchSucceeded;
 
     public ExchangeRateService(ExchangeRateRepository repository,
             MessageSource messages,
             @Value("${vita.currency.remote-enabled:true}") boolean remoteEnabled,
-            @Value("${vita.currency.api-url:https://open.er-api.com/v6/latest/JPY}") String apiUrl,
-            @Value("${vita.currency.cache-minutes:10}") long cacheMinutes) {
+            @Value("${vita.currency.api-url:https://api.frankfurter.dev/v2/rates?base=JPY}") String apiUrl) {
         this.repository = repository;
         this.messages = messages;
         this.remoteEnabled = remoteEnabled;
         this.apiUrl = apiUrl;
-        this.cacheMinutes = cacheMinutes;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
     }
 
-    public RateSnapshot snapshot(String language) {
-        // メモ: 取得間隔を守り、最新・DBキャッシュ・参考値の順で表示データを選びます。
+    public synchronized RateSnapshot snapshot(String language) {
+        // メモ: DBの取得日を見て、成功済みのレートがある日は外部APIを呼び出しません。
+        LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
-        if (remoteEnabled && shouldRefresh(now)) {
+        List<ExchangeRate> cached = repository.findAllByOrderByCurrencyCodeAsc();
+        if (remoteEnabled && shouldRefresh(today, cached)) {
+            lastFetchAttemptDate = today;
+            lastFetchSucceeded = false;
             try {
                 refresh();
-                lastFetchAt = now;
                 lastFetchSucceeded = true;
+                cached = repository.findAllByOrderByCurrencyCodeAsc();
             } catch (IOException | InterruptedException | IllegalArgumentException e) {
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
                 logger.warn("為替レートの外部取得に失敗しました。保存済みデータまたは参考レートを使用します。", e);
-                lastFetchAt = now;
-                lastFetchSucceeded = false;
             }
         }
 
-        List<ExchangeRate> cached = repository.findAllByOrderByCurrencyCodeAsc();
         if (!cached.isEmpty()) {
-            RateSnapshot.Source source = isFresh(now)
+            RateSnapshot.Source source = isFresh(today)
                     ? RateSnapshot.Source.LIVE
                     : RateSnapshot.Source.CACHE;
             return new RateSnapshot(toViews(cached, language), source, updatedAtLabel(cached));
@@ -114,19 +116,22 @@ public class ExchangeRateService {
                 RateSnapshot.Source.FALLBACK, null);
     }
 
-    private boolean shouldRefresh(LocalDateTime now) {
-        // メモ: 初回取得またはキャッシュ期限切れの場合だけ外部 API を呼び出します。
-        return lastFetchAt == null
-                || lastFetchAt.plusMinutes(cacheMinutes).isBefore(now);
+    private boolean shouldRefresh(LocalDate today, List<ExchangeRate> cached) {
+        if (today.equals(lastFetchAttemptDate)) {
+            return false;
+        }
+        return CODES.stream().anyMatch(code -> cached.stream()
+                .filter(rate -> code.equals(rate.getCurrencyCode()))
+                .map(ExchangeRate::getUpdatedAt)
+                .filter(Objects::nonNull)
+                .noneMatch(updatedAt -> today.equals(updatedAt.toLocalDate())));
     }
 
-    private boolean isFresh(LocalDateTime now) {
-        // メモ: 今回の外部取得に成功し、キャッシュ期限内なら最新レートとして扱います。
-        return lastFetchSucceeded && lastFetchAt != null
-                && lastFetchAt.plusMinutes(cacheMinutes).isAfter(now);
+    private boolean isFresh(LocalDate today) {
+        return lastFetchSucceeded && today.equals(lastFetchAttemptDate);
     }
 
-    /** open.er-api.com は「1円あたりの通貨量」を返すため、円換算に逆数を使います。 */
+    /** Frankfurter API の「1円あたりの外貨量」を、1外貨あたりの円に変換します。 */
     private void refresh() throws IOException, InterruptedException {
         // メモ: 通信と応答の検証が済んだレートだけをまとめてDBへ保存します。
         HttpRequest request = HttpRequest.newBuilder(URI.create(apiUrl))
@@ -142,33 +147,33 @@ public class ExchangeRateService {
         }
 
         JsonNode root = mapper.readTree(response.body());
-        if (!"success".equals(root.path("result").asString())) {
-            throw new IOException("currency API did not return success");
+        if (!root.isArray()) {
+            throw new IOException("currency API returned an invalid response");
         }
 
-        JsonNode rates = root.path("rates");
+        Map<String, BigDecimal> ratesPerJpy = new HashMap<>();
+        for (JsonNode row : root) {
+            String code = row.path("quote").asString();
+            JsonNode value = row.path("rate");
+            if ("JPY".equals(row.path("base").asString())
+                    && CODES.contains(code)
+                    && value.isNumber()
+                    && value.asDouble() > 0) {
+                ratesPerJpy.put(code, BigDecimal.valueOf(value.asDouble()));
+            }
+        }
+
+        if (!ratesPerJpy.keySet().containsAll(CODES)) {
+            throw new IOException("currency API returned incomplete supported rates");
+        }
+
         List<ExchangeRate> updates = new ArrayList<>();
-
         for (String code : CODES) {
-            JsonNode value = rates.get(code);
-            if (value == null || !value.isNumber()) {
-                continue;
-            }
-            double perJpy = value.asDouble();
-            if (perJpy <= 0) {
-                continue;
-            }
-
-            BigDecimal rate = BigDecimal.valueOf(1.0 / perJpy)
-                    .setScale(4, RoundingMode.HALF_UP);
+            BigDecimal rate = BigDecimal.ONE.divide(ratesPerJpy.get(code), 4, RoundingMode.HALF_UP);
             ExchangeRate entity = repository.findByCurrencyCode(code)
                     .orElseGet(() -> new ExchangeRate(code, rate));
             entity.update(rate);
             updates.add(entity);
-        }
-
-        if (updates.isEmpty()) {
-            throw new IOException("currency API returned no supported rates");
         }
         repository.saveAll(updates);
     }

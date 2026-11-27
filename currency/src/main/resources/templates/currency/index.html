@@ -4,58 +4,144 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="#{currency.title} + ' | Vita'">為替レート | Vita</title>
   <link rel="stylesheet" th:href="@{/css/app.css}">
+  <link rel="stylesheet" th:href="@{/css/currency.css}">
 </head>
 <body>
 <div class="app-shell">
   <header th:replace="~{fragments/common :: header(#{currency.title})}"></header>
-  <main class="page-content">
-    <!-- メモ: レートの取得元を表示し、利用者が参考値・保存値・最新値を区別できるようにします。 -->
-    <h1 th:text="#{currency.heading}">リアルタイム為替レート</h1>
-    <p class="notice" th:if="${snapshot.live}"
-       th:text="#{currency.live(${snapshot.updatedAtLabel})}">最新のレートを取得しました。</p>
-    <p class="notice" th:if="${snapshot.cached}" th:text="#{currency.cached}">保存済みのレートを表示しています。</p>
-    <p class="notice" th:if="${snapshot.fallback}" th:text="#{currency.fallback}">参考レートを表示しています。</p>
-    <p class="sample-note" th:if="${snapshot.updatedAtLabel != null}"
-       th:text="#{currency.updated(${snapshot.updatedAtLabel})}">更新日時</p>
-    <section class="rate-list" aria-label="為替レート">
-      <article class="rate-row" th:each="rate : ${snapshot.rates}">
-        <span class="rate-flag" aria-hidden="true" th:text="${rate.flag}">💱</span>
-        <div>
-          <strong th:text="|${rate.code} · ${rate.name}|">USD · 米ドル</strong>
-          <small th:text="|1 ${rate.code} = ${#numbers.formatDecimal(rate.rate, 1, 'COMMA', 2, 'POINT')} JPY|">1 USD = 149.32 JPY</small>
-        </div>
-      </article>
-    </section>
-    <!-- メモ: 換算結果は送信された金額と選択通貨からサーバー側で計算します。 -->
-    <section class="convert-panel">
-      <h2 th:text="#{currency.convert.title}">外貨を円に換算する</h2>
-      <form th:action="@{/currency/convert}" method="post">
-        <label class="form-field">
-          <span th:text="#{currency.amount}">金額</span>
-          <input type="number" name="amount" min="0" step="0.01"
-                 th:value="${inputAmount != null ? inputAmount : 100}" required>
-        </label>
-        <label class="form-field">
-          <span th:text="#{currency.currency}">通貨</span>
-          <select name="currency" required>
-            <option th:each="rate : ${snapshot.rates}" th:value="${rate.code}"
-                    th:text="|${rate.code} · ${rate.name}|"
-                    th:selected="${selectedCurrency == rate.code}">USD</option>
-          </select>
-        </label>
-        <button class="primary-action" type="submit" th:text="#{currency.convert}">日本円に換算する</button>
-      </form>
-      <p class="field-error" role="alert" th:if="${error}" th:text="${error}"></p>
-      <p class="conversion-result" th:if="${convertedAmount != null}">
-        <span th:text="|${inputAmount} ${selectedCurrency}|">100 USD</span>
-        <b th:text="|= ${#numbers.formatDecimal(convertedAmount, 1, 'COMMA', 0, 'POINT')} JPY|">= 14,932 JPY</b>
+  <main class="page-content fx-page" id="fx-app"
+        th:attr="data-jpy-name=#{currency.name.JPY},
+          data-error-empty=#{currency.error.empty},
+          data-error-negative=#{currency.error.negative},
+          data-error-invalid=#{currency.error.invalid},
+          data-error-too-large=#{currency.error.too-large},
+          data-error-unavailable=#{currency.error.unavailable},
+          data-ten-thousand-template=#{currency.rate.ten-thousand}">
+    <h1 th:text="#{currency.heading}">為替レートと通貨換算</h1>
+    <p class="notice fx-notice" th:text="#{currency.reference.notice}">
+      表示するレートは基準レートです。実際の両替レートや手数料とは異なります。
+    </p>
+
+    <noscript>
+      <p class="field-error" th:text="#{currency.javascript.required}">
+        通貨換算にはJavaScriptが必要です。
       </p>
+    </noscript>
+
+    <div class="fx-toolbar">
+      <p class="fx-status" role="status" aria-live="polite">
+        <span th:if="${snapshot.updatedAtLabel != null}"
+              th:text="#{currency.updated(${snapshot.updatedAtLabel})}">更新日時</span>
+        <span th:if="${snapshot.updatedAtLabel == null}"
+              th:text="#{currency.status.unavailable}">取得日時はありません</span>
+      </p>
+      <button type="button" class="fx-refresh" id="fx-refresh" th:text="#{currency.refresh}">
+        表示を更新
+      </button>
+    </div>
+
+    <p class="notice" th:if="${snapshot.live}"
+       th:text="#{currency.live(${snapshot.updatedAtLabel})}">本日のレートを取得しました。</p>
+    <p class="notice" th:if="${snapshot.cached}" th:text="#{currency.cached}">
+      保存済みのレートを表示しています。
+    </p>
+    <p class="notice" th:if="${snapshot.fallback}" th:text="#{currency.fallback}">
+      参考レートを表示しています。
+    </p>
+
+    <h2 class="section-title" th:text="#{currency.rates.heading}">主な通貨の参考レート</h2>
+    <p class="sample-note" th:text="#{currency.rates.hint}">
+      行を選ぶと、その通貨から日本円への換算に切り替わります。
+    </p>
+    <section class="rate-list fx-rate-list" id="fx-rate-list"
+             th:attr="aria-label=#{currency.rates.heading}">
+      <button type="button" class="fx-rate-row" th:each="rate : ${snapshot.rates}"
+              th:attr="data-code=${rate.code},data-rate-to-jpy=${rate.rate}">
+        <span class="fx-rate-flag" aria-hidden="true" th:text="${rate.flag}">💱</span>
+        <span class="fx-rate-name">
+          <strong th:text="${rate.code}">USD</strong>
+          <small th:text="${rate.name}">米ドル</small>
+        </span>
+        <span class="fx-rate-value">
+          <b th:text="|1 ${rate.code} = ${#numbers.formatDecimal(rate.rate, 1, 'COMMA', 2, 'POINT')} JPY|">
+            1 USD = 149.32 JPY
+          </b>
+          <small class="fx-rate-ten-thousand"></small>
+        </span>
+      </button>
     </section>
-    <p class="sample-note" th:text="#{currency.note}">レートは10分ごとに更新されます。</p>
-    <a class="secondary-action" th:href="@{/receipts/scan}" th:text="#{currency.record}">家計簿に記録する</a>
+
+    <section class="convert-panel fx-convert" aria-labelledby="fx-convert-title">
+      <h2 id="fx-convert-title" th:text="#{currency.convert.title}">通貨を換算する</h2>
+      <form th:action="@{/currency/convert}" method="post" id="fx-form">
+        <label class="form-field" for="fx-amount">
+          <span th:text="#{currency.amount}">金額</span>
+          <input type="text" id="fx-amount" name="amount" inputmode="decimal" autocomplete="off"
+                 th:value="${inputAmount != null ? inputAmount : 10000}"
+                 aria-describedby="fx-input-error">
+        </label>
+        <p class="field-error" id="fx-input-error" role="alert" hidden></p>
+
+        <div class="fx-pair">
+          <label class="form-field" for="fx-from">
+            <span th:text="#{currency.from}">換算元</span>
+            <select id="fx-from" name="from">
+              <option value="JPY" th:attr="data-name=#{currency.name.JPY}"
+                      th:selected="${fromCurrency == 'JPY'}"
+                      th:text="|JPY · #{currency.name.JPY}|">JPY · 日本円</option>
+              <option th:each="rate : ${snapshot.rates}" th:value="${rate.code}"
+                      th:attr="data-name=${rate.name}"
+                      th:selected="${fromCurrency == rate.code}"
+                      th:text="|${rate.code} · ${rate.name}|">USD · 米ドル</option>
+            </select>
+          </label>
+          <button type="button" class="fx-swap" id="fx-swap"
+                  th:attr="aria-label=#{currency.swap}" disabled>⇅</button>
+          <label class="form-field" for="fx-to">
+            <span th:text="#{currency.to}">換算先</span>
+            <select id="fx-to" name="to">
+              <option value="JPY" th:attr="data-name=#{currency.name.JPY}"
+                      th:selected="${toCurrency == 'JPY'}"
+                      th:text="|JPY · #{currency.name.JPY}|">JPY · 日本円</option>
+              <option th:each="rate : ${snapshot.rates}" th:value="${rate.code}"
+                      th:attr="data-name=${rate.name}"
+                      th:selected="${toCurrency == rate.code}"
+                      th:text="|${rate.code} · ${rate.name}|">USD · 米ドル</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="fx-result" aria-live="polite">
+          <p class="fx-result-main" id="fx-result-main">
+            <span th:if="${convertedAmount != null}"
+                  th:text="|${inputAmount} ${fromCurrency} = ${#numbers.formatDecimal(convertedAmount, 1, 'COMMA', convertedAmount.scale(), 'POINT')} ${toCurrency}|">
+              100 USD = 14932 JPY
+            </span>
+            <span th:if="${convertedAmount == null}">—</span>
+          </p>
+          <p class="fx-result-sub" id="fx-result-sub"></p>
+        </div>
+        <p class="field-error" role="alert" th:if="${error}" th:text="${error}"></p>
+        <button class="primary-action" type="submit" th:text="#{currency.calculate}">
+          換算する
+        </button>
+      </form>
+    </section>
+
+    <p class="sample-note" th:text="#{currency.note}">
+      レートは1日1回取得し、再読み込みでは再取得しません。
+    </p>
+    <p class="fx-credit">
+      <span th:text="#{currency.credit}">レート提供</span>:
+      <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>
+    </p>
+    <a class="secondary-action" th:href="@{/receipts/scan}" th:text="#{currency.record}">
+      家計簿に記録する
+    </a>
   </main>
   <footer th:replace="~{fragments/common :: footer}"></footer>
   <nav th:replace="~{fragments/common :: nav('currency')}"></nav>
 </div>
+<script th:src="@{/js/currency.js}" defer></script>
 </body>
 </html>
