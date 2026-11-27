@@ -2,6 +2,19 @@
 
 沖縄みらいAI＆IT専門学校が観光産業の課題解決に繋がるユーザアプリを制作するためのリポジトリ
 
+## Maven モジュール構成
+
+`Tourism_app` 直下の `spot/`、`currency/`、`language/`、`receipt/` が4つの機能モジュールです。`kakeibo/` は認証・支出管理を含む起動アプリで、各機能モジュールを読み込んで一つのWebアプリとして動作します。4機能はビルド単位で分離されていますが、ログイン・DB・画面遷移は共有します。
+
+```text
+Tourism_app/
+├── spot/       # 観光スポット・旅行プラン
+├── currency/   # 為替レート・通貨換算
+├── language/   # 言語設定・翻訳・共通セッション情報
+├── receipt/    # レシートOCR（Amazon Textract）
+└── kakeibo/    # 起動アプリ、認証、家計簿、共通画面
+```
+
 ## ホーム・ログイン・家計簿の統合アプリ
 
 実行する Maven プロジェクトは `kakeibo` です。ZIP 内のホーム・ログイン・新規登録・言語選択の画面をこのアプリへ統合しています。
@@ -9,19 +22,20 @@
 
 ### Eclipse / VS Code
 
-JDK 25 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」で `kakeibo/pom.xml` を選択します。
-VS Code では `kakeibo` を開き、Java 拡張機能を使用します。
+JDK 25 以上を使用してください。Eclipse では「既存 Maven プロジェクトのインポート」でリポジトリ直下の `pom.xml` を選択します。
+VS Code ではリポジトリルートを開き、Java 拡張機能を使用します。
 起動クラスは `com.example.kakeibo.KakeiboApplication` です。
 
 ローカル開発では既定の `local` プロファイルで Oracle XE に接続します。Oracle のパスワードは
 Git 管理外の `application-local.properties` に設定してください。テストは別の H2 データベースを使用します。
 
 ```sh
-cd kakeibo
 # Linux / macOS
-sh mvnw spring-boot:run
+sh kakeibo/mvnw -f pom.xml -pl kakeibo -am -DskipTests install
+sh kakeibo/mvnw -f pom.xml -pl kakeibo spring-boot:run
 # Windows PowerShell
-# .\mvnw.cmd spring-boot:run
+# .\kakeibo\mvnw.cmd -f pom.xml -pl kakeibo -am -DskipTests install
+# .\kakeibo\mvnw.cmd -f pom.xml -pl kakeibo spring-boot:run
 ```
 
 ブラウザで `http://localhost:8080/` を開きます。起動画面 → 言語選択 → 新規登録 → ログイン → ホームと進めます。
@@ -29,8 +43,8 @@ sh mvnw spring-boot:run
 
 - レシート家計簿：`/receipts/scan` で画像を Amazon Textract に送り、品目・金額・日付・カテゴリの候補を読み取ります。内容を確認・修正して支出登録できます。AWS 認証情報と `textract:AnalyzeDocument` 権限、`AWS_REGION`（既定 `ap-northeast-1`）が必要です。画像はAWSへ送信され、利用料金が発生する場合があります。AWS認証情報はGitに登録しないでください。ローカルではAWS CLIの名前付きプロファイル、またはIAMロールを使ってください。品目名はレシート上部の会社名・店舗名を使い、店名が「領収書」の上にある場合はその上の文字、見出しが一番上にある場合はその下の店名を読み取ります。品目名にはブランド名だけを使い、後ろの行にある「○○店」のような支店名は含めません。店名が「は」のように3文字以下で読めた場合は、下の行とつないで店名にします。金額は明示的な「合計」を最優先、次に「合」、最後に「計」の順で取得します（「小計」は使いません）。「言十」のような誤認識や「¥5188%」のように金額と税率が連結された場合にも対応します。カテゴリは店舗名・商品名から自動判定します。読み取れない場合は画面から手入力で登録できます。
 - スポット：スポット一覧・詳細（見本データ 2 件）
-- リアルタイム：為替レート・円換算画面（`/currency`）。レートは見本の固定値で、外部 API には未接続です
-- 言語選択：選択の保存のみで、画面全体の翻訳は未実装です
+- リアルタイム：為替レート・円換算画面（`/currency`）。レートは外部 API・キャッシュ・フォールバックから取得します
+- 言語選択：選択をセッションに保存し、翻訳メッセージを切り替えます
 - マイページ：共通の下部ナビから開けます（ログイン中の利用者情報を表示）
 
 ### DB とログイン
@@ -55,7 +69,8 @@ $env:SPRING_DATASOURCE_URL = "jdbc:oracle:thin:@//<共有DBのホスト>:1521/XE
 $env:SPRING_DATASOURCE_USERNAME = "vita_app_user"
 $env:SPRING_DATASOURCE_PASSWORD = "<共有DBのパスワード>"
 $env:MAVEN_USER_HOME = "$env:USERPROFILE\.m2"
-.\mvnw.cmd spring-boot:run
+.\kakeibo\mvnw.cmd -f pom.xml -pl kakeibo -am -DskipTests install
+.\kakeibo\mvnw.cmd -f pom.xml -pl kakeibo spring-boot:run
 ```
 
 起動後はアプリを動かしているPCのIPアドレスを使い、同じネットワーク内から `http://<アプリPCのIP>:8080/` を開きます。PCとネットワークのファイアウォールで、TCP 8080への受信をLAN内に限って許可する必要があります。
@@ -73,9 +88,9 @@ $env:MAVEN_USER_HOME = "$env:USERPROFILE\.m2"
 ### テスト
 
 ```sh
-cd kakeibo
-sh mvnw verify
-# Windows: .\mvnw.cmd verify
+# Run from the repository root
+sh kakeibo/mvnw -f pom.xml -pl kakeibo -am verify
+# Windows: .\kakeibo\mvnw.cmd -f pom.xml -pl kakeibo -am verify
 ```
 
 テストは専用のインメモリ H2 を使用します。ログイン・登録失敗、CSRF、ホームから家計簿への遷移、支出のユーザー分離、ログアウトを検証します。

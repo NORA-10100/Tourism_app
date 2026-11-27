@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" th:attr="lang=${currentLanguage}">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ログイン | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
+  <title th:text="#{login.title} + ' | Vita'">ログイン | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body class="auth-page"><main class="auth-shell">
-  <p class="auth-brand">Vita <span aria-hidden="true">・沖縄観光支援</span></p>
+  <p class="auth-brand">Vita <span aria-hidden="true" th:text="#{login.brand}">・沖縄観光支援</span></p>
   <section class="auth-panel">
-    <h1>ログイン</h1>
-    <p class="auth-description">アカウントにログインしてください。</p>
+    <!-- メモ: 入力エラーと完了通知はコントローラーから受け取り、画面言語に合わせて表示します。 -->
+    <h1 th:text="#{login.heading}">ログイン</h1>
+    <p class="auth-description" th:text="#{login.description}">アカウントにログインしてください。</p>
     <p class="auth-message error" th:if="${error}" th:text="${error}"></p>
     <p class="auth-message success" th:if="${message}" th:text="${message}"></p>
     <form th:action="@{/login}" method="post">
-      <label for="email">メールアドレス<input id="email" type="email" name="email" autocomplete="username" required></label>
-      <label for="password">パスワード<input id="password" type="password" name="password" autocomplete="current-password" required></label>
-      <button class="auth-submit" type="submit">ログイン</button>
+      <label for="email"><span th:text="#{login.email}">メールアドレス</span><input id="email" type="email" name="email" autocomplete="username" required></label>
+      <label for="password"><span th:text="#{login.password}">パスワード</span><input id="password" type="password" name="password" autocomplete="current-password" required></label>
+      <button class="auth-submit" type="submit" th:text="#{login.submit}">ログイン</button>
     </form>
-    <nav class="auth-links" aria-label="ログイン関連">
-      <a class="secondary-action" th:href="@{/register}">新規アカウントを作成</a>
-      <p><a th:href="@{/language}">言語選択へ戻る</a></p>
+    <nav class="auth-links" th:attr="aria-label=#{login.title}">
+      <a class="secondary-action" th:href="@{/register}" th:text="#{login.register}">新規アカウントを作成</a>
+      <p><a th:href="@{/language}" th:text="#{login.language}">言語選択へ戻る</a></p>
     </nav>
   </section>
 </main></body>

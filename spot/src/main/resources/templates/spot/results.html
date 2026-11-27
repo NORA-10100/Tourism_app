@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" th:attr="lang=${currentLanguage}">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="#{spot.results.title} + ' | Vita'">おすすめスポット | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <header th:replace="~{fragments/common :: header(#{spot.results.title})}"></header>
+  <main class="page-content">
+    <!-- メモ: URLの検索条件に一致するスポットを表示し、地図は別タブで開きます。 -->
+    <a class="back-text" th:href="@{/spots}" th:text="#{common.back_home}">‹ 戻る</a>
+    <h1 th:text="${area == null || area.isBlank()} ? #{spot.results.summary_all(${spots.size()})} : #{spot.results.summary(${area}, ${spots.size()})}">おすすめスポット</h1>
+    <form class="filter-chips" th:action="@{/spots/results}" method="get">
+      <label class="form-field">
+        <span th:text="#{spot.area.label}">滞在エリア</span>
+        <select name="area">
+          <option value="" th:text="#{spot.area.all}">すべてのエリア</option>
+          <option th:each="option : ${areas}" th:value="${option}" th:text="${option}"
+                  th:selected="${area == option}">那覇市</option>
+        </select>
+      </label>
+      <label class="form-field">
+        <span th:text="#{spot.category.label}">カテゴリ</span>
+        <select name="category">
+          <option th:each="option : ${categories}" th:value="${option.value}"
+                  th:text="${option.label}" th:selected="${category == option.value}">すべて</option>
+        </select>
+      </label>
+      <button class="secondary-action" type="submit" th:text="#{spot.search}">検索</button>
+    </form>
+    <!-- メモ: 選択状態は利用者セッションに保持され、詳細画面から追加・解除します。 -->
+    <p class="empty-state" th:if="${#lists.isEmpty(spots)}" th:text="#{spot.results.empty}">条件に一致するスポットが見つかりませんでした。</p>
+    <section th:unless="${#lists.isEmpty(spots)}" aria-label="スポット一覧">
+      <article class="spot-card" th:each="spot : ${spots}">
+        <div class="spot-photo"><span th:text="${spot.categoryLabel}">文化</span><b aria-hidden="true">✦</b></div>
+        <div class="spot-card-body">
+          <h2><a th:href="@{/spots/{id}(id=${spot.id})}" th:text="${spot.name}">首里城公園</a></h2>
+          <p th:text="${spot.area}">那覇市</p>
+          <div class="spot-meta">
+            <span th:text="|${spot.crowdLabel} · ★ ${spot.reviewScore}|">空いています · ★ 4.3</span>
+            <span th:if="${selectedIds.contains(spot.id)}" th:text="#{spot.results.selected}">選択中</span>
+          </div>
+          <a class="text-action" target="_blank" rel="noopener noreferrer"
+             th:href="|https://www.openstreetmap.org/?mlat=${spot.latitude}&amp;mlon=${spot.longitude}#map=16/${spot.latitude}/${spot.longitude}|"
+             th:text="#{spot.results.map}">地図</a>
+        </div>
+      </article>
+    </section>
+    <a class="primary-action" th:href="@{/spots/days}" th:text="#{spot.results.plan}">選択したスポットで旅行プランを作る</a>
+  </main>
+  <footer th:replace="~{fragments/common :: footer}"></footer>
+  <nav th:replace="~{fragments/common :: nav('spots')}"></nav>
+</div>
+</body>
+</html>

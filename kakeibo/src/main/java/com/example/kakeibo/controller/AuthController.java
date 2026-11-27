@@ -1,7 +1,10 @@
 package com.example.kakeibo.controller;
 
+import java.util.Locale;
 import java.util.Optional;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.kakeibo.service.UserService;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 // メモ: 登録・ログイン・ログアウトとホーム画面への移動を受け持ちます。
@@ -20,10 +23,12 @@ public class AuthController {
 
     // メモ: 登録やログインの実際の処理を依頼するサービスです。
     private final UserService userService;
+    private final MessageSource messages;
 
     // メモ: Spring から利用者サービスを受け取ります。
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, MessageSource messages) {
         this.userService = userService;
+        this.messages = messages;
     }
 
     // スプラッシュ画面
@@ -31,30 +36,6 @@ public class AuthController {
     // メモ: アプリを開いたとき最初に表示する画面です。
     public String splash() {
         return "splash";
-    }
-
-    // 言語選択画面
-    @GetMapping("/language")
-    // メモ: 利用者に表示言語を選んでもらう画面です。
-    public String language(HttpSession session, Model model) {
-        model.addAttribute("selectedLanguage", session.getAttribute("language"));
-        model.addAttribute("loggedIn", Boolean.TRUE.equals(session.getAttribute("loggedIn")));
-        return "language";
-    }
-
-    @PostMapping("/language")
-    // メモ: 選ばれた言語をセッションに保存してログイン画面へ進みます。
-    public String selectLanguage(
-            @RequestParam String language,
-            HttpSession session) {
-
-        if (!java.util.Set.of("ja", "en", "zh-CN", "zh-TW", "ko").contains(language)) {
-            return "redirect:/language";
-        }
-        session.setAttribute("language", language);
-        return Boolean.TRUE.equals(session.getAttribute("loggedIn"))
-                ? "redirect:/home"
-                : "redirect:/login";
     }
 
     // ログイン画面
@@ -95,7 +76,7 @@ public class AuthController {
 
         model.addAttribute(
             "error",
-            "メールアドレスもしくはパスワードが間違っています。"
+            message("login.error")
         );
 
         return "login";
@@ -140,28 +121,25 @@ public class AuthController {
             );
 
             if (error != null) {
-                model.addAttribute("error", error);
+                model.addAttribute("error", registrationError(error));
                 return "register";
             }
 
             redirectAttributes.addFlashAttribute(
                 "message",
-                "新規登録が完了しました。ログインしてください。"
+                message("register.success")
             );
 
             return "redirect:/login";
 
         } catch (org.springframework.dao.DuplicateKeyException e) {
-            model.addAttribute(
-                "error",
-                "このメールアドレスはすでに登録されています。"
-            );
+            model.addAttribute("error", message("register.error.email_exists"));
+            return "register";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            model.addAttribute("error", message("register.error.email_exists"));
             return "register";
         } catch (org.springframework.dao.DataAccessException e) {
-            model.addAttribute(
-                "error",
-                "データベースへの登録に失敗しました。DB接続とテーブルを確認してください。"
-            );
+            model.addAttribute("error", message("register.error.database"));
             return "register";
         }
     }
@@ -196,5 +174,28 @@ public class AuthController {
         }
         model.addAttribute("username", session.getAttribute("username"));
         return "home";
+    }
+
+    private String registrationError(String error) {
+        // メモ: サービスの入力検証結果を翻訳キーへ対応付け、選択中の言語で表示します。
+        String key = switch (error) {
+            case "ユーザー名は1～15文字で入力してください。" -> "register.error.username";
+            case "メールアドレスの形式を確認してください。" -> "register.error.email_format";
+            case "パスワードは8～16文字で、大文字・小文字・数字を含めてください。"
+                    -> "register.error.password";
+            case "確認用パスワードが一致しません。" -> "register.error.password_mismatch";
+            case "メールアドレスは255文字以内で入力してください。"
+                    -> "register.error.email_length";
+            case "このメールアドレスはすでに登録されています。"
+                    -> "register.error.email_exists";
+            default -> null;
+        };
+        return key == null ? error : message(key);
+    }
+
+    private String message(String key) {
+        // メモ: LocaleResolver がセッションから決めた言語でメッセージを取得します。
+        Locale locale = LocaleContextHolder.getLocale();
+        return messages.getMessage(key, null, locale);
     }
 }

@@ -1,0 +1,53 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Kakeibo modules",
+			"type": "shell",
+			"command": "${workspaceFolder}\\kakeibo\\mvnw.cmd",
+			"args": [
+				"-f",
+				"pom.xml",
+				"-pl",
+				"kakeibo",
+				"-am",
+				"-DskipTests",
+				"install"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$maven"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Start Kakeibo",
+			"type": "shell",
+			"command": "${workspaceFolder}\\kakeibo\\mvnw.cmd",
+			"args": [
+				"-f",
+				"pom.xml",
+				"-pl",
+				"kakeibo",
+				"spring-boot:run"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"isBackground": true,
+			"problemMatcher": [
+				"$maven"
+			]
+		},
+		{
+			"label": "Run Kakeibo on 8080",
+			"dependsOn": [
+				"Build Kakeibo modules",
+				"Start Kakeibo"
+			],
+			"dependsOrder": "sequence"
+		}
+	]
+}
