@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>沖縄のローカルスポット | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}"></head>
+<body><div class="app-shell">
+  <header th:replace="~{fragments/common :: header('ローカルスポット提案')}"></header>
+  <main class="page-content">
+    <a class="back-text" th:href="@{/home}">‹ ホーム</a><h1>沖縄のローカルスポット</h1>
+    <p class="spot-intro">行きたいエリアや興味に合わせて、地元の魅力に出会える場所を探します。</p>
+    <form class="spot-search-panel" method="get" th:action="@{/features/spots}">
+      <label class="form-field">エリア<select name="area"><option value="">沖縄全域</option><option th:each="area : ${areas}" th:value="${area}" th:text="${area}" th:selected="${area == selectedArea}"></option></select></label>
+      <label class="form-field">興味のあるカテゴリ<select name="category"><option value="">すべて</option><option th:each="category : ${categories}" th:value="${category}" th:text="${category}" th:selected="${category == selectedCategory}"></option></select></label>
+      <button class="primary-action" type="submit">この条件でおすすめを探す</button>
+    </form>
+    <section class="recommendation-heading" aria-live="polite"><div><span class="eyebrow">LOCAL PICKS</span><h2>あなたへのおすすめ</h2></div><span class="result-count" th:text="|${#lists.size(spots)}件|">0件</span></section>
+    <p class="recommendation-message" th:text="${recommendationMessage}">条件に合わせたスポットです。</p>
+    <div th:if="${#lists.isEmpty(spots)}" class="empty-state"><strong>条件に合う場所がありません</strong><br>沖縄全域やすべてのカテゴリに戻してお試しください。</div>
+    <article class="spot-card" th:each="spot, iter : ${spots}">
+      <div class="spot-photo" th:classappend="| spot-photo-${spot.visualStyle}|"><span th:text="${spot.feature}">おすすめ</span><b th:text="${iter.index == 0 ? 'LOCAL' : 'OKINAWA'}">LOCAL</b></div>
+      <div class="spot-card-body"><div class="spot-card-labels"><span class="spot-tag" th:text="${spot.area}">エリア</span><span class="spot-tag" th:text="${spot.category}">カテゴリ</span><span class="quiet-tag" th:text="|静かさの目安 ${100 - spot.crowdScore}%|">静かさの目安</span></div>
+        <h2 th:text="${spot.name}">スポット名</h2><p th:text="${spot.description}">スポットの説明</p>
+        <div class="spot-meta"><span th:text="|★ ${spot.rating}（口コミ ${spot.reviewCount}件）|">評価</span><span th:text="${spot.access}">アクセス</span></div>
+        <a class="text-action" th:href="@{/features/spots/{id}(id=${spot.id})}">詳細を見る　›</a>
+      </div>
+    </article>
+    <p class="sample-note">掲載内容と静かさの目安はアプリ内サンプルです。混雑・天気・地図のリアルタイム情報とは連携していません。営業時間や交通手段は訪問前に最新情報をご確認ください。</p>
+  </main><nav th:replace="~{fragments/common :: nav('spots')}"></nav>
+</div></body></html>
