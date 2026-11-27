@@ -28,7 +28,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * 家計簿（支出）の画面。基本設計書 2-2-1「支出確認・編集画面」に相当する部分。
- * 設計書の権限は SELECT/INSERT/UPDATE のみなので、削除機能は作っていない。
+ * 編集画面から、誤って重複登録した支出を削除できます。
  */
 @Controller
 @RequestMapping("/expenses")
@@ -185,10 +185,13 @@ public class ExpenseController {
         return "expenses/Graph";
     }
 
-    // 支出の削除（編集画面から削除できるようにする追加機能）
+    // 支出の削除（重複登録した支出を編集画面から削除できるようにする）
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Integer id, HttpSession session) {
+    // メモ: 所有者を確認してから削除し、一覧画面へ戻ります。
+    public String delete(@PathVariable Integer id, HttpSession session,
+                         RedirectAttributes redirectAttributes) {
         repository.delete(ownedExpense(id, session));
+        redirectAttributes.addFlashAttribute("message", "支出を削除しました。");
         return "redirect:/expenses";
     }
 }

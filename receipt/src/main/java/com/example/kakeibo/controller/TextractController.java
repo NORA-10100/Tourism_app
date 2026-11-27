@@ -42,7 +42,18 @@ public class TextractController {
             }
 
             String contentType = file.getContentType();
-            if (!"image/png".equals(contentType) && !"image/jpeg".equals(contentType)) {
+            String normalized = contentType == null ? "" : contentType.toLowerCase(java.util.Locale.ROOT);
+            int separator = normalized.indexOf(';');
+            if (separator >= 0) {
+                normalized = normalized.substring(0, separator).trim();
+            } else {
+                normalized = normalized.trim();
+            }
+            if (!"image/png".equals(normalized)
+                    && !"image/jpeg".equals(normalized)
+                    && !"image/jpg".equals(normalized)
+                    && !"image/pjpeg".equals(normalized)
+                    && !"image/x-png".equals(normalized)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "PNGまたはJPEG画像を指定してください");
             }

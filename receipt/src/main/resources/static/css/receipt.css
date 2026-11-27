@@ -47,6 +47,28 @@ body.receipt-page {
   margin-bottom: 22px;
 }
 
+.scan-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.scan-actions .btn,
+.scan-actions .btn-ghost {
+  margin-top: 0;
+}
+
+.manual-link {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.manual-link a {
+  color: var(--sea-700);
+  font-weight: 700;
+}
+
 .dropzone {
   position: relative;
   display: flex;

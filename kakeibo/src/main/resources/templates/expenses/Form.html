@@ -11,7 +11,7 @@
     <p class="notice" th:if="${receiptMessage}" th:text="${receiptMessage}"></p>
     <p class="notice">内容を入力して「保存」を押してください。保存後、支出グラフを表示します。</p>
     <form class="form-panel" th:action="@{/expenses}" th:object="${expense}" method="post">
-      <input type="hidden" th:field="*{id}"><input type="hidden" th:field="*{userId}">
+      <input type="hidden" th:field="*{id}">
       <label class="form-field">支出日<input type="date" th:field="*{expenseDate}" required><span class="field-error" th:if="${#fields.hasErrors('expenseDate')}" th:errors="*{expenseDate}"></span></label>
       <label class="form-field">品目名<input type="text" maxlength="50" th:field="*{itemName}" required><span class="field-error" th:if="${#fields.hasErrors('itemName')}" th:errors="*{itemName}"></span></label>
       <label class="form-field">金額（円）<input type="number" min="0.01" step="0.01" th:field="*{amountJpy}" required><span class="field-error" th:if="${#fields.hasErrors('amountJpy')}" th:errors="*{amountJpy}"></span></label>
@@ -21,6 +21,12 @@
         <label class="form-field">外貨の金額<input type="number" min="0" step="0.01" th:field="*{originalAmount}"></label>
       </details>
       <div class="form-actions"><button class="primary-action" type="submit">保存してグラフを見る</button><a class="secondary-action" th:href="@{/expenses}">一覧へ戻る</a></div>
+    </form>
+    <form class="delete-panel" th:if="${expense.id != null}"
+          th:action="@{/expenses/{id}/delete(id=${expense.id})}" method="post"
+          onsubmit="return confirm('この支出を削除しますか？この操作は元に戻せません。');">
+      <p class="delete-note">誤って重複して登録した場合は、この支出を削除できます。</p>
+      <button class="danger-action" type="submit">この支出を削除</button>
     </form>
   </main>
   <nav th:replace="~{fragments/common :: nav('expenses')}"></nav>
