@@ -7,6 +7,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import software.amazon.awssdk.core.SdkBytes;
@@ -21,6 +23,8 @@ import software.amazon.awssdk.services.textract.model.FeatureType;
 
 @Service
 public class TextractService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextractService.class);
 
     // 学内Wi-FiなどでDNSが一時的に引けなくなることがあるため、少し待って再試行します。
     private static final int MAX_ATTEMPTS = 3;
@@ -72,9 +76,8 @@ public class TextractService {
                     break;
                 }
 
-                System.out.println("===== Textract接続エラー（再試行 " + attempt + "回目） =====");
-                System.out.println(e.getMessage());
-                System.out.println("=============================");
+                LOGGER.warn("Textract request failed temporarily; retrying attempt {}/{}: {}",
+                        attempt, MAX_ATTEMPTS, e.getMessage());
 
                 if (!waitBeforeRetry(RETRY_DELAY_MILLIS * attempt)) {
                     break;
@@ -82,9 +85,6 @@ public class TextractService {
             }
         }
 
-        System.out.println("===== Textract接続エラー =====");
-        lastError.printStackTrace();
-        System.out.println("=============================");
         throw lastError;
     }
 
