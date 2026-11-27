@@ -1,28 +1,30 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" th:attr="lang=${currentLanguage}">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <title>ホーム | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
+  <title th:text="#{home.title} + ' | Vita'">ホーム | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body><div class="app-shell">
-  <header th:replace="~{fragments/common :: header('ホーム')}"></header>
+  <header th:replace="~{fragments/common :: header(#{home.title})}"></header>
   <main class="page-content home-page">
-    <div class="home-welcome"><span class="avatar" aria-hidden="true">☀</span><p class="greeting"><strong th:text="${username}">たび子</strong>さん、こんにちは</p><a class="bell-link" th:href="@{/mypage}" aria-label="お知らせ">♧</a></div>
-    <a class="home-search" th:href="@{/features/spots}"><span aria-hidden="true">⌕</span>場所・スポットを検索</a>
+    <!-- メモ: 表示文言はメッセージリソースから取得し、カードは各機能の新しいURLへ案内します。 -->
+    <div class="home-welcome"><span class="avatar" aria-hidden="true">☀</span><p class="greeting" th:text="#{home.greeting(${username})}">たび子さん、こんにちは</p><a class="bell-link" th:href="@{/mypage}" th:attr="aria-label=#{header.mypage}">♧</a></div>
+    <a class="home-search" th:href="@{/spots}"><span aria-hidden="true">⌕</span><span th:text="#{home.search}">場所・スポットを検索</span></a>
     <section class="home-hero">
-      <div><small>人気のエリアに出かけよう</small><h1>ローカルスポット</h1><a class="hero-action" th:href="@{/features/spots}">おすすめを見る</a></div>
+      <div><small th:text="#{home.hero.small}">人気のエリアに出かけよう</small><h1 th:text="#{home.hero.title}">ローカルスポット</h1><a class="hero-action" th:href="@{/spots}" th:text="#{home.hero.action}">おすすめを見る</a></div>
       <span class="hero-sun" aria-hidden="true">✦</span>
     </section>
-    <h2 class="section-title">旅をサポートする機能</h2>
-    <section class="feature-grid" aria-label="機能一覧">
-      <a class="feature-card" th:href="@{/features/spots}"><span aria-hidden="true">♧</span><strong>おすすめスポット</strong></a>
-      <a class="feature-card" th:href="@{/receipts/scan}"><span aria-hidden="true">▣</span><strong>家計簿</strong></a>
-      <a class="feature-card" th:href="@{/currency}"><span aria-hidden="true">⇄</span><strong>為替レート</strong></a>
-      <a class="feature-card" th:href="@{/language}"><span aria-hidden="true">文</span><strong>言語設定</strong></a>
+    <h2 class="section-title" th:text="#{home.features}">旅をサポートする機能</h2>
+    <section class="feature-grid" th:attr="aria-label=#{home.features}">
+      <a class="feature-card" th:href="@{/spots}"><span aria-hidden="true">♧</span><strong th:text="#{home.card.spots}">おすすめスポット</strong></a>
+      <a class="feature-card" th:href="@{/receipts/scan}"><span aria-hidden="true">▣</span><strong th:text="#{home.card.expenses}">家計簿</strong></a>
+      <a class="feature-card" th:href="@{/currency}"><span aria-hidden="true">⇄</span><strong th:text="#{home.card.currency}">為替レート</strong></a>
+      <a class="feature-card" th:href="@{/language}"><span aria-hidden="true">文</span><strong th:text="#{home.card.language}">言語設定</strong></a>
     </section>
-    <p class="notice">スポットや為替の情報はデモ表示です。旅の支出を記録して確認できます。</p>
+    <p class="notice" th:text="#{home.notice}">AIが観光客の少ないローカルスポットを提案します。</p>
   </main>
+  <footer th:replace="~{fragments/common :: footer}"></footer>
   <nav class="bottom-nav" th:replace="~{fragments/common :: nav('home')}"></nav>
 </div></body>
 </html>
