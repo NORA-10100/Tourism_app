@@ -16,9 +16,9 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.textract.TextractClient;
 import software.amazon.awssdk.services.textract.model.Block;
 import software.amazon.awssdk.services.textract.model.BlockType;
-import software.amazon.awssdk.services.textract.model.Document;
 import software.amazon.awssdk.services.textract.model.AnalyzeDocumentRequest;
 import software.amazon.awssdk.services.textract.model.AnalyzeDocumentResponse;
+import software.amazon.awssdk.services.textract.model.Document;
 import software.amazon.awssdk.services.textract.model.FeatureType;
 
 @Service
@@ -38,7 +38,7 @@ public class TextractService {
         this.textractClient = textractClient;
     }
 
-    public List<String> readText(byte[] imageBytes) throws Exception {
+    public List<String> readText(byte[] imageBytes) {
         Document document = Document.builder()
                 .bytes(SdkBytes.fromByteArray(imageBytes))
                 .build();
@@ -64,28 +64,22 @@ public class TextractService {
     // DNS・接続の一時的な失敗だけを再試行します。
     // 認証エラーなど、待っても直らない失敗はすぐに呼び出し元へ返します。
     private AnalyzeDocumentResponse analyzeWithRetry(AnalyzeDocumentRequest request) {
-        SdkClientException lastError = null;
-
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        for (int attempt = 1; ; attempt++) {
             try {
                 return textractClient.analyzeDocument(request);
             } catch (SdkClientException e) {
-                lastError = e;
-
-                if (attempt == MAX_ATTEMPTS || !isTransientNetworkError(e)) {
-                    break;
+                if (attempt >= MAX_ATTEMPTS || !isTransientNetworkError(e)) {
+                    throw e;
                 }
 
                 LOGGER.warn("Textract request failed temporarily; retrying attempt {}/{}: {}",
                         attempt, MAX_ATTEMPTS, e.getMessage());
 
                 if (!waitBeforeRetry(RETRY_DELAY_MILLIS * attempt)) {
-                    break;
+                    throw e;
                 }
             }
         }
-
-        throw lastError;
     }
 
     private static boolean isTransientNetworkError(Throwable error) {

@@ -47,7 +47,7 @@ public class FeatureController {
 
         // メモ: 旧機能カードの識別子を、各機能の新しいURLに集約します。
         return switch (feature) {
-            case "receipts" -> "redirect:/receipts/scan";
+            case "receipts" -> "redirect:/expenses";
             case "languages" -> "redirect:/language";
             case "settings" -> "redirect:/mypage";
             case "realtime" -> "redirect:/currency";
