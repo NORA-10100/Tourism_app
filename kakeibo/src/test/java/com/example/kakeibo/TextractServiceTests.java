@@ -25,7 +25,7 @@ import software.amazon.awssdk.services.textract.model.BlockType;
 class TextractServiceTests {
 
     @Test
-    void retriesWhenDnsLookupFailsTemporarily() throws Exception {
+    void retriesWhenDnsLookupFailsTemporarily() {
         TextractClient client = mock(TextractClient.class);
 
         when(client.analyzeDocument(any(AnalyzeDocumentRequest.class)))
