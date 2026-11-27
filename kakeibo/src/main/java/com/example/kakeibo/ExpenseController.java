@@ -1,6 +1,5 @@
 package com.example.kakeibo;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ import org.springframework.http.HttpStatus;
 
 /**
  * 家計簿（支出）の画面。基本設計書 2-2-1「支出確認・編集画面」に相当する部分。
- * 設計書の権限は SELECT/INSERT/UPDATE のみなので、削除機能は作っていない。
+ * 編集画面から、誤って重複登録した支出を削除できます。
  */
 @Controller
 @RequestMapping("/expenses")
@@ -66,12 +65,10 @@ public class ExpenseController {
 
     // メモ: 支出の検索・保存に使う部品です。
     private final ExpenseRepository repository;
-    private final ReceiptOcrService receiptOcrService;
 
     // メモ: Spring から支出用リポジトリを受け取ります。
-    public ExpenseController(ExpenseRepository repository, ReceiptOcrService receiptOcrService) {
+    public ExpenseController(ExpenseRepository repository) {
         this.repository = repository;
-        this.receiptOcrService = receiptOcrService;
     }
 
     // 一覧
@@ -84,11 +81,12 @@ public class ExpenseController {
 
     // メモ: レシート画像の撮影・選択画面を表示します。
     @GetMapping("/capture")
-    public String capture() {
-        return "expenses/Capture";
+    public String capture(Model model) {
+        model.addAttribute("categories", CATEGORIES);
+        return "receipts/scan";
     }
 
-    // メモ: レシート画像を読み取り、抽出した支出内容を入力画面へ渡します。
+    // メモ: 古い画面からの画像送信は、支出入力画面へ案内します。
     @PostMapping("/capture")
     public String receiveReceipt(@RequestParam("receipt") MultipartFile receipt,
                                  RedirectAttributes redirectAttributes) {
@@ -97,18 +95,7 @@ public class ExpenseController {
             redirectAttributes.addFlashAttribute("receiptError", "画像ファイルを選択してください。");
             return "redirect:/expenses/capture";
         }
-        try {
-            ReceiptOcrService.ReceiptData receiptData =
-                    receiptOcrService.read(receipt.getBytes(), receipt.getContentType());
-            redirectAttributes.addFlashAttribute("receiptItemName", receiptData.itemName());
-            redirectAttributes.addFlashAttribute("receiptAmount", receiptData.amount());
-            redirectAttributes.addFlashAttribute("receiptDate", receiptData.date());
-            redirectAttributes.addFlashAttribute("receiptCategory", receiptData.category());
-            redirectAttributes.addFlashAttribute("receiptMessage", "レシートを読み取りました。内容を確認して保存してください。");
-        } catch (IOException | ReceiptOcrService.ReceiptOcrException e) {
-            redirectAttributes.addFlashAttribute("receiptError",
-                    "レシートを読み取れませんでした。手入力で登録してください。");
-        }
+        redirectAttributes.addFlashAttribute("receiptMessage", "画像を受け付けました。内容を入力してください。");
         return "redirect:/expenses/new";
     }
 
@@ -119,28 +106,9 @@ public class ExpenseController {
         Expense expense = new Expense();
         expense.setUserId(userId(session));
         expense.setExpenseDate(LocalDate.now());
-        applyReceiptAttributes(model, expense);
         model.addAttribute("expense", expense);
         model.addAttribute("categories", CATEGORIES);
         return "expenses/Form";
-    }
-
-    private void applyReceiptAttributes(Model model, Expense expense) {
-        if (model.containsAttribute("receiptItemName")) {
-            expense.setItemName((String) model.getAttribute("receiptItemName"));
-        }
-        if (model.containsAttribute("receiptAmount")) {
-            expense.setAmountJpy((BigDecimal) model.getAttribute("receiptAmount"));
-        }
-        if (model.containsAttribute("receiptDate")) {
-            expense.setExpenseDate((LocalDate) model.getAttribute("receiptDate"));
-        }
-        if (model.containsAttribute("receiptCategory")) {
-            String category = (String) model.getAttribute("receiptCategory");
-            if (CATEGORIES.contains(category)) {
-                expense.setCategory(category);
-            }
-        }
     }
 
     // 編集フォーム
@@ -217,10 +185,13 @@ public class ExpenseController {
         return "expenses/Graph";
     }
 
-    // 支出の削除（編集画面から削除できるようにする追加機能）
+    // 支出の削除（重複登録した支出を編集画面から削除できるようにする）
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Integer id, HttpSession session) {
+    // メモ: 所有者を確認してから削除し、一覧画面へ戻ります。
+    public String delete(@PathVariable Integer id, HttpSession session,
+                         RedirectAttributes redirectAttributes) {
         repository.delete(ownedExpense(id, session));
+        redirectAttributes.addFlashAttribute("message", "支出を削除しました。");
         return "redirect:/expenses";
     }
 }

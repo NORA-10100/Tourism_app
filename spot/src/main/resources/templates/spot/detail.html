@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" th:attr="lang=${currentLanguage}">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="#{spot.detail.title} + ' | Vita'">スポット詳細 | Vita</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+  <header th:replace="~{fragments/common :: header(#{spot.detail.title})}"></header>
+  <main class="page-content">
+    <!-- メモ: スポット情報は表示専用とし、旅行プランへの追加・解除だけをPOSTします。 -->
+    <a class="back-text" th:href="@{/spots/results}" th:text="#{spot.detail.back}">‹ スポット一覧</a>
+    <div class="spot-photo detail-photo"><span th:text="${spot.categoryLabel}">文化</span></div>
+    <h1 th:text="${spot.name}">首里城公園</h1>
+    <p class="detail-description" th:text="${spot.area}">那覇市</p>
+    <div class="detail-info">
+      <span th:text="#{spot.detail.hours}">営業時間</span><strong th:text="${spot.businessHours}">8:30-18:00</strong>
+      <span th:text="#{spot.detail.access}">アクセス</span><strong th:text="${spot.accessInfo}">アクセス情報</strong>
+      <span th:text="#{spot.detail.review}">口コミ評価</span><strong th:text="${spot.reviewScore}">4.3</strong>
+      <span th:text="#{spot.detail.crowd}">混雑度</span><strong th:text="${spot.crowdLabel}">空いています</strong>
+    </div>
+    <form class="form-actions" th:action="@{/spots/selection}" method="post">
+      <input type="hidden" name="spotId" th:value="${spot.id}">
+      <button class="primary-action" type="submit"
+              th:text="${selected} ? #{spot.detail.selected} : #{spot.detail.select}">旅行プランに追加する</button>
+    </form>
+    <a class="secondary-action" th:if="${selected}" th:href="@{/spots/days}"
+       th:text="#{spot.detail.plan}">旅行プランを作る</a>
+  </main>
+  <footer th:replace="~{fragments/common :: footer}"></footer>
+  <nav th:replace="~{fragments/common :: nav('spots')}"></nav>
+</div>
+</body>
+</html>

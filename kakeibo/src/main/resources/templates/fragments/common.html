@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <body>
+<!-- メモ: ログイン状態と言語に合わせた共通ヘッダー・ナビゲーション・フッターを各画面へ提供します。 -->
 <header class="app-header" th:fragment="header(title)">
-  <a class="header-home" th:href="@{/home}" aria-label="ホームへ">Vita <span>旅をもっと楽しく、もっとスマートに。</span></a>
+  <a class="header-home" th:href="${loggedIn} ? @{/home} : @{/language}" th:attr="aria-label=#{header.home}">Vita <span th:text="#{app.tagline}">旅をもっと楽しく、もっとスマートに。</span></a>
   <span class="header-title" th:text="${title}">画面名</span>
-  <a class="profile-link" th:href="@{/mypage}" aria-label="マイページ">●</a>
+  <a class="profile-link" th:if="${loggedIn}" th:href="@{/mypage}" th:attr="aria-label=#{header.mypage}">●</a>
+  <a class="profile-link" th:unless="${loggedIn}" th:href="@{/language}" th:attr="aria-label=#{header.language}">文</a>
 </header>
-<nav class="bottom-nav" th:fragment="nav(active)" aria-label="メインメニュー">
-  <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span aria-hidden="true">⌂</span>ホーム</a>
-  <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/features/spots}"><span aria-hidden="true">♧</span>スポット</a>
-  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/expenses/capture}"><span aria-hidden="true">▣</span>家計簿</a>
-  <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span aria-hidden="true">⇄</span>為替</a>
-  <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span aria-hidden="true">♙</span>マイページ</a>
+<nav class="bottom-nav" th:fragment="nav(active)" th:attr="aria-label=#{nav.label}">
+  <a class="nav-item" th:classappend="${active == 'home'} ? ' is-active'" th:href="@{/home}"><span aria-hidden="true">⌂</span><span class="nav-label" th:text="#{nav.home}">ホーム</span></a>
+  <a class="nav-item" th:classappend="${active == 'spots'} ? ' is-active'" th:href="@{/spots}"><span aria-hidden="true">♧</span><span class="nav-label" th:text="#{nav.spots}">スポット</span></a>
+  <a class="nav-item" th:classappend="${active == 'expenses'} ? ' is-active'" th:href="@{/receipts/scan}"><span aria-hidden="true">▣</span><span class="nav-label" th:text="#{nav.expenses}">家計簿</span></a>
+  <a class="nav-item" th:classappend="${active == 'currency'} ? ' is-active'" th:href="@{/currency}"><span aria-hidden="true">⇄</span><span class="nav-label" th:text="#{nav.currency}">為替</span></a>
+  <a class="nav-item" th:classappend="${active == 'settings'} ? ' is-active'" th:href="@{/mypage}"><span aria-hidden="true">♙</span><span class="nav-label" th:text="#{nav.settings}">設定</span></a>
 </nav>
+<footer class="app-footer" th:fragment="footer">
+  <span>Vita</span>
+  <small th:text="#{footer.copy}">© 2026 Team Vita</small>
+</footer>
 </body>
 </html>

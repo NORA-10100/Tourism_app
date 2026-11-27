@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" th:attr="lang=${currentLanguage}">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>新規登録 | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
+  <title th:text="#{register.title} + ' | Vita'">新規登録 | Vita</title><link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body class="auth-page"><main class="auth-shell">
-  <p class="auth-brand">Vita <span aria-hidden="true">・沖縄観光支援</span></p>
+  <p class="auth-brand">Vita <span aria-hidden="true" th:text="#{login.brand}">・沖縄観光支援</span></p>
   <section class="auth-panel">
-    <h1>新規登録</h1>
-    <p class="auth-description">アカウント情報を入力してください。</p>
+    <!-- メモ: ブラウザー側の入力補助に加え、登録条件はサーバー側でも検証します。 -->
+    <h1 th:text="#{register.heading}">新規登録</h1>
+    <p class="auth-description" th:text="#{register.description}">アカウント情報を入力してください。</p>
     <p class="auth-message error" th:if="${error}" th:text="${error}"></p>
     <form th:action="@{/register}" method="post">
-      <label for="username">ユーザー名（1～15文字）<input id="username" type="text" name="username" maxlength="15" autocomplete="name" required></label>
-      <label for="email">メールアドレス<input id="email" type="email" name="email" maxlength="255" autocomplete="email" required></label>
-      <label for="password">パスワード<input id="password" type="password" name="password" minlength="8" maxlength="16" autocomplete="new-password" required></label>
-      <small>8～16文字で、大文字・小文字・数字を含めてください。</small>
-      <label for="confirmPassword">パスワード（確認用）<input id="confirmPassword" type="password" name="confirmPassword" minlength="8" maxlength="16" autocomplete="new-password" required></label>
-      <button class="auth-submit" type="submit">アカウントを作成</button>
+      <label for="username"><span th:text="#{register.username}">ユーザー名（1〜15文字）</span><input id="username" type="text" name="username" maxlength="15" autocomplete="name" required></label>
+      <label for="email"><span th:text="#{register.email}">メールアドレス</span><input id="email" type="email" name="email" maxlength="255" autocomplete="email" required></label>
+      <label for="password"><span th:text="#{register.password}">パスワード</span><input id="password" type="password" name="password" minlength="8" maxlength="16" autocomplete="new-password" required></label>
+      <small th:text="#{register.password.hint}">8〜16文字で、大文字・小文字・数字を含めてください。</small>
+      <label for="confirmPassword"><span th:text="#{register.confirm}">パスワード（確認用）</span><input id="confirmPassword" type="password" name="confirmPassword" minlength="8" maxlength="16" autocomplete="new-password" required></label>
+      <button class="auth-submit" type="submit" th:text="#{register.submit}">アカウントを作成</button>
     </form>
-    <nav class="auth-links" aria-label="登録関連"><a th:href="@{/login}">ログイン画面へ戻る</a></nav>
+    <nav class="auth-links"><a th:href="@{/login}" th:text="#{register.login}">ログイン画面へ戻る</a></nav>
   </section>
 </main></body>
 </html>
